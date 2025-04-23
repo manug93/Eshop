@@ -3,6 +3,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
@@ -10,9 +12,12 @@ import ProductDetail from "@/pages/product-detail";
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import CheckoutSuccess from "@/pages/checkout-success";
+import AuthPage from "@/pages/auth-page";
 
 // Layout component with navigation
 function Layout({ children }: { children: React.ReactNode }) {
+  const { user, logoutMutation } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-white shadow-sm">
@@ -28,6 +33,24 @@ function Layout({ children }: { children: React.ReactNode }) {
                 Cart
                 <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
               </a>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-700">
+                    {user.firstName ? `Hello, ${user.firstName}` : `Hello, ${user.username}`}
+                  </span>
+                  <button 
+                    onClick={() => logoutMutation.mutate()}
+                    className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium"
+                    disabled={logoutMutation.isPending}
+                  >
+                    {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  </button>
+                </div>
+              ) : (
+                <a href="/auth" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
+                  Login / Register
+                </a>
+              )}
             </nav>
           </div>
         </div>
@@ -125,19 +148,18 @@ function Router() {
           </Layout>
         )}
       </Route>
-      <Route path="/checkout">
-        {() => (
-          <Layout>
-            <Checkout />
-          </Layout>
-        )}
-      </Route>
-      <Route path="/checkout-success">
-        {() => (
-          <Layout>
-            <CheckoutSuccess />
-          </Layout>
-        )}
+      <ProtectedRoute path="/checkout">
+        <Layout>
+          <Checkout />
+        </Layout>
+      </ProtectedRoute>
+      <ProtectedRoute path="/checkout-success">
+        <Layout>
+          <CheckoutSuccess />
+        </Layout>
+      </ProtectedRoute>
+      <Route path="/auth">
+        {() => <AuthPage />}
       </Route>
       {/* Fallback to 404 */}
       <Route>
@@ -154,10 +176,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
