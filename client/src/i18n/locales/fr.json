@@ -1,0 +1,288 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "products": "Produits",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "user": {
+    "profile": "Votre Profil",
+    "orders": "Vos Commandes",
+    "settings": "Paramètres",
+    "admin": "Tableau de Bord Admin",
+    "logout": "Déconnexion"
+  },
+  "cart": {
+    "title": "Panier",
+    "empty": "Votre panier est vide",
+    "emptyMessage": "Il semble que vous n'ayez pas encore ajouté de produits à votre panier.",
+    "items": "Articles du Panier",
+    "remove": "Supprimer",
+    "subtotal": "Sous-total",
+    "shipping": "Livraison",
+    "freeShipping": "Gratuite",
+    "tax": "Taxes",
+    "discount": "Réduction",
+    "total": "Total",
+    "taxesIncluded": "Taxes et frais de livraison calculés à la caisse",
+    "taxesNote": "Frais de livraison et taxes calculés à la caisse.",
+    "checkout": "Commander",
+    "orContinueShopping": "ou",
+    "continueShopping": "Continuer vos Achats",
+    "proceedToCheckout": "Passer à la Caisse",
+    "orderSummary": "Récapitulatif de la Commande",
+    "promoCode": "Code Promo",
+    "apply": "Appliquer",
+    "enterPromoCode": "Veuillez entrer un code promo",
+    "promoApplied": "Code promo appliqué: {discount} de réduction",
+    "invalidPromo": "Code promo invalide"
+  },
+  "product": {
+    "addToCart": "Ajouter au Panier",
+    "outOfStock": "Rupture de Stock",
+    "off": "REMISE",
+    "specifications": "Caractéristiques",
+    "category": "Catégorie",
+    "brand": "Marque",
+    "stock": "Stock",
+    "quantity": "Quantité",
+    "addToWishlist": "Ajouter à la Liste de Souhaits",
+    "removeFromWishlist": "Retirer de la Liste de Souhaits",
+    "relatedProducts": "Produits Associés",
+    "notFound": {
+      "title": "Produit Non Trouvé",
+      "message": "Nous n'avons pas pu trouver le produit que vous recherchez.",
+      "backToProducts": "Retour aux Produits"
+    }
+  },
+  "products": {
+    "filters": "Filtres",
+    "showing": "Affichage de {count} sur {total} produits",
+    "sortBy": "Trier par",
+    "noProductsFound": "Aucun produit trouvé",
+    "tryDifferentFilters": "Essayez différents filtres ou parcourez tous les produits",
+    "sort": {
+      "recommended": "Recommandés",
+      "priceLowHigh": "Prix: Croissant",
+      "priceHighLow": "Prix: Décroissant",
+      "rating": "Mieux Notés",
+      "newest": "Nouveautés"
+    }
+  },
+  "filters": {
+    "title": "Filtres",
+    "categories": "Catégories",
+    "priceRange": "Fourchette de Prix",
+    "brands": "Marques",
+    "rating": "Évaluation",
+    "apply": "Appliquer les Filtres",
+    "clear": "Effacer les Filtres",
+    "clearAll": "Tout effacer",
+    "seeMore": "Voir plus",
+    "seeLess": "Voir moins"
+  },
+  "checkout": {
+    "title": "Paiement",
+    "subtitle": "Finaliser votre achat",
+    "emptyCart": "Votre panier est vide",
+    "addItemsMessage": "Ajoutez des articles à votre panier avant de passer à la caisse.",
+    "browseProducts": "Parcourir les Produits",
+    "steps": {
+      "shipping": "Livraison",
+      "payment": "Paiement",
+      "confirmation": "Confirmation"
+    },
+    "shippingInformation": "Informations de Livraison",
+    "paymentInformation": "Informations de Paiement",
+    "orderSummary": "Récapitulatif de la Commande",
+    "subtotal": "Sous-total",
+    "shipping": "Livraison",
+    "freeShipping": "Gratuite",
+    "tax": "Taxes",
+    "total": "Total",
+    "continueToPayment": "Continuer vers le Paiement",
+    "backToShipping": "Retour aux Informations de Livraison",
+    "preparing": "Préparation du paiement...",
+    "error": "Erreur",
+    "unableToInitialize": "Impossible d'initialiser le paiement. Veuillez réessayer.",
+    "tryAgain": "Réessayer",
+    "pay": "Payer",
+    "processing": "Traitement en cours...",
+    "secureCheckout": "Paiement Sécurisé",
+    "securityMessage": "Vos informations de paiement sont cryptées et traitées en toute sécurité.",
+    "form": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "address": "Adresse",
+      "city": "Ville",
+      "postalCode": "Code Postal",
+      "state": "Région/Département",
+      "country": "Pays",
+      "phone": "Téléphone"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Découvrez les Derniers Produits pour Votre Style de Vie",
+      "subtitle": "Achetez les nouveautés avec des remises exclusives et la livraison gratuite pour les commandes de plus de 50€.",
+      "shopNow": "Acheter Maintenant",
+      "viewDeals": "Voir les Offres"
+    },
+    "categories": {
+      "title": "Acheter par Catégorie",
+      "viewAll": "Voir toutes les catégories"
+    },
+    "featuredProducts": {
+      "title": "Produits en Vedette",
+      "viewAll": "Voir tous les produits"
+    },
+    "deals": {
+      "title": "Offres Spéciales",
+      "viewAll": "Voir toutes les offres"
+    },
+    "features": {
+      "shipping": {
+        "title": "Livraison Gratuite",
+        "description": "Pour les commandes de plus de 50€"
+      },
+      "secure": {
+        "title": "Paiement Sécurisé",
+        "description": "Paiement 100% sécurisé"
+      },
+      "returns": {
+        "title": "Retours Faciles",
+        "description": "Politique de retour de 30 jours"
+      }
+    }
+  },
+  "footer": {
+    "shop": "Boutique",
+    "newArrivals": "Nouveautés",
+    "bestSellers": "Meilleures Ventes",
+    "deals": "Offres & Promotions",
+    "clearance": "Déstockage",
+    "about": "À Propos",
+    "ourStory": "Notre Histoire",
+    "careers": "Carrières",
+    "press": "Presse",
+    "sustainability": "Développement Durable",
+    "customerService": "Service Client",
+    "contact": "Nous Contacter",
+    "shipping": "Livraison & Retours",
+    "warranty": "Informations de Garantie",
+    "faq": "FAQ",
+    "newsletter": "Restez Connecté",
+    "newsletterText": "Abonnez-vous à notre newsletter pour des offres exclusives et des mises à jour",
+    "subscribe": "S'abonner",
+    "rightsReserved": "Tous droits réservés.",
+    "privacy": "Politique de Confidentialité",
+    "terms": "Conditions d'Utilisation",
+    "cookies": "Cookies"
+  },
+  "notFound": {
+    "title": "404 - Page Non Trouvée",
+    "message": "Oups! La page que vous recherchez n'existe pas.",
+    "backToHome": "Retour à l'Accueil",
+    "browseProducts": "Parcourir les Produits"
+  },
+  "admin": {
+    "backToStore": "Retour à la Boutique",
+    "navigation": {
+      "dashboard": "Tableau de Bord",
+      "orders": "Commandes",
+      "products": "Produits",
+      "promotions": "Promotions",
+      "settings": "Paramètres"
+    },
+    "dashboard": {
+      "title": "Tableau de Bord Admin",
+      "subtitle": "Suivez les performances de votre boutique",
+      "salesOverview": "Aperçu des Ventes",
+      "totalSales": "Ventes Totales",
+      "totalOrders": "Total des Commandes",
+      "averageOrderValue": "Valeur Moyenne des Commandes",
+      "vsPreviousPeriod": "vs. période précédente",
+      "salesTrend": "Tendance des Ventes",
+      "topCategories": "Meilleures Catégories",
+      "topProducts": "Meilleurs Produits",
+      "revenue": "Revenu",
+      "orders": "Commandes",
+      "timeRanges": {
+        "today": "Aujourd'hui",
+        "week": "Cette Semaine",
+        "month": "Ce Mois",
+        "quarter": "Ce Trimestre",
+        "year": "Cette Année"
+      }
+    },
+    "orders": {
+      "title": "Commandes",
+      "orderDetails": "Détails de la Commande",
+      "order": "Commande",
+      "customerInfo": "Informations Client",
+      "name": "Nom",
+      "email": "Email",
+      "items": "Articles Commandés",
+      "quantity": "Quantité",
+      "subtotal": "Sous-total",
+      "shipping": "Livraison",
+      "tax": "Taxes",
+      "total": "Total",
+      "statusUpdated": "Statut de la commande mis à jour avec succès",
+      "updateFailed": "Échec de la mise à jour du statut de la commande"
+    },
+    "products": {
+      "title": "Produits",
+      "readOnlyNotice": "Ceci est un catalogue de démonstration utilisant l'API dummyjson.com. La gestion des produits est en lecture seule."
+    },
+    "promotions": {
+      "title": "Promotions",
+      "newPromotion": "Nouvelle Promotion",
+      "editPromotion": "Modifier la Promotion",
+      "code": "Code Promo",
+      "type": "Type",
+      "value": "Valeur",
+      "minPurchase": "Achat Minimum",
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin",
+      "description": "Description",
+      "create": "Créer la Promotion",
+      "update": "Mettre à Jour la Promotion",
+      "cancel": "Annuler",
+      "confirmDelete": "Confirmer la Suppression",
+      "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer le code de promotion '{code}'?",
+      "delete": "Supprimer",
+      "createSuccess": "Promotion créée avec succès",
+      "updateSuccess": "Promotion mise à jour avec succès",
+      "deleteSuccess": "Promotion supprimée avec succès",
+      "saveFailed": "Échec de l'enregistrement de la promotion",
+      "deleteFailed": "Échec de la suppression de la promotion"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "generalSettings": "Paramètres Généraux",
+      "storeName": "Nom de la Boutique",
+      "storeEmail": "Email de la Boutique",
+      "currency": "Devise",
+      "taxRate": "Taux de Taxe",
+      "shippingSettings": "Paramètres de Livraison",
+      "freeShippingOver": "Livraison Gratuite au-delà de",
+      "flatRate": "Tarif Forfaitaire d'Expédition"
+    }
+  },
+  "toast": {
+    "success": "Succès",
+    "error": "Erreur",
+    "info": "Information",
+    "warning": "Avertissement",
+    "invalidEmail": "Veuillez entrer une adresse email valide",
+    "subscribeSuccess": "Vous avez été inscrit avec succès à notre newsletter",
+    "productAdded": "{title} a été ajouté à votre panier",
+    "productRemoved": "{title} a été retiré de votre panier",
+    "promoApplied": "Le code promo {code} a été appliqué",
+    "addedToWishlist": "Produit ajouté à votre liste de souhaits",
+    "removedFromWishlist": "Produit retiré de votre liste de souhaits",
+    "paymentFailed": "Le paiement a échoué. Veuillez réessayer."
+  }
+}

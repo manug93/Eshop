@@ -1,0 +1,288 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "user": {
+    "profile": "Your Profile",
+    "orders": "Your Orders",
+    "settings": "Settings",
+    "admin": "Admin Dashboard",
+    "logout": "Sign out"
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "empty": "Your cart is empty",
+    "emptyMessage": "Looks like you haven't added any products to your cart yet.",
+    "items": "Cart Items",
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "tax": "Tax",
+    "discount": "Discount",
+    "total": "Total",
+    "taxesIncluded": "Taxes and shipping calculated at checkout",
+    "taxesNote": "Shipping and taxes calculated at checkout.",
+    "checkout": "Checkout",
+    "orContinueShopping": "or",
+    "continueShopping": "Continue Shopping",
+    "proceedToCheckout": "Proceed to Checkout",
+    "orderSummary": "Order Summary",
+    "promoCode": "Promo Code",
+    "apply": "Apply",
+    "enterPromoCode": "Please enter a promo code",
+    "promoApplied": "Promo code applied: {discount} off",
+    "invalidPromo": "Invalid promo code"
+  },
+  "product": {
+    "addToCart": "Add to Cart",
+    "outOfStock": "Out of Stock",
+    "off": "OFF",
+    "specifications": "Specifications",
+    "category": "Category",
+    "brand": "Brand",
+    "stock": "Stock",
+    "quantity": "Quantity",
+    "addToWishlist": "Add to Wishlist",
+    "removeFromWishlist": "Remove from Wishlist",
+    "relatedProducts": "Related Products",
+    "notFound": {
+      "title": "Product Not Found",
+      "message": "We couldn't find the product you're looking for.",
+      "backToProducts": "Back to Products"
+    }
+  },
+  "products": {
+    "filters": "Filters",
+    "showing": "Showing {count} of {total} products",
+    "sortBy": "Sort by",
+    "noProductsFound": "No products found",
+    "tryDifferentFilters": "Try different filters or browse all products",
+    "sort": {
+      "recommended": "Recommended",
+      "priceLowHigh": "Price: Low to High",
+      "priceHighLow": "Price: High to Low",
+      "rating": "Top Rated",
+      "newest": "Newest Arrivals"
+    }
+  },
+  "filters": {
+    "title": "Filters",
+    "categories": "Categories",
+    "priceRange": "Price Range",
+    "brands": "Brands",
+    "rating": "Rating",
+    "apply": "Apply Filters",
+    "clear": "Clear Filters",
+    "clearAll": "Clear all",
+    "seeMore": "See more",
+    "seeLess": "See less"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "subtitle": "Complete your purchase",
+    "emptyCart": "Your cart is empty",
+    "addItemsMessage": "Add some items to your cart before checking out.",
+    "browseProducts": "Browse Products",
+    "steps": {
+      "shipping": "Shipping",
+      "payment": "Payment",
+      "confirmation": "Confirmation"
+    },
+    "shippingInformation": "Shipping Information",
+    "paymentInformation": "Payment Information",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "tax": "Tax",
+    "total": "Total",
+    "continueToPayment": "Continue to Payment",
+    "backToShipping": "Back to Shipping",
+    "preparing": "Preparing payment...",
+    "error": "Error",
+    "unableToInitialize": "Unable to initialize payment. Please try again.",
+    "tryAgain": "Try Again",
+    "pay": "Pay",
+    "processing": "Processing...",
+    "secureCheckout": "Secure Checkout",
+    "securityMessage": "Your payment information is encrypted and processed securely.",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "address": "Address",
+      "city": "City",
+      "postalCode": "Postal Code",
+      "state": "State/Province",
+      "country": "Country",
+      "phone": "Phone"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Discover the Latest Products for Your Lifestyle",
+      "subtitle": "Shop the newest arrivals with exclusive discounts and free shipping on orders over $50.",
+      "shopNow": "Shop Now",
+      "viewDeals": "View Deals"
+    },
+    "categories": {
+      "title": "Shop by Category",
+      "viewAll": "View all categories"
+    },
+    "featuredProducts": {
+      "title": "Featured Products",
+      "viewAll": "View all products"
+    },
+    "deals": {
+      "title": "Special Deals",
+      "viewAll": "View all deals"
+    },
+    "features": {
+      "shipping": {
+        "title": "Free Shipping",
+        "description": "On orders over $50"
+      },
+      "secure": {
+        "title": "Secure Payment",
+        "description": "100% secure checkout"
+      },
+      "returns": {
+        "title": "Easy Returns",
+        "description": "30-day return policy"
+      }
+    }
+  },
+  "footer": {
+    "shop": "Shop",
+    "newArrivals": "New Arrivals",
+    "bestSellers": "Best Sellers",
+    "deals": "Deals & Promotions",
+    "clearance": "Clearance",
+    "about": "About",
+    "ourStory": "Our Story",
+    "careers": "Careers",
+    "press": "Press",
+    "sustainability": "Sustainability",
+    "customerService": "Customer Service",
+    "contact": "Contact Us",
+    "shipping": "Shipping & Returns",
+    "warranty": "Warranty Information",
+    "faq": "FAQs",
+    "newsletter": "Stay Connected",
+    "newsletterText": "Subscribe to our newsletter for exclusive offers and updates",
+    "subscribe": "Subscribe",
+    "rightsReserved": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookies"
+  },
+  "notFound": {
+    "title": "404 - Page Not Found",
+    "message": "Oops! The page you are looking for doesn't exist.",
+    "backToHome": "Back to Home",
+    "browseProducts": "Browse Products"
+  },
+  "admin": {
+    "backToStore": "Back to Store",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "products": "Products",
+      "promotions": "Promotions",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "subtitle": "Monitor your store's performance",
+      "salesOverview": "Sales Overview",
+      "totalSales": "Total Sales",
+      "totalOrders": "Total Orders",
+      "averageOrderValue": "Average Order Value",
+      "vsPreviousPeriod": "vs. previous period",
+      "salesTrend": "Sales Trend",
+      "topCategories": "Top Categories",
+      "topProducts": "Top Products",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "timeRanges": {
+        "today": "Today",
+        "week": "This Week",
+        "month": "This Month",
+        "quarter": "This Quarter",
+        "year": "This Year"
+      }
+    },
+    "orders": {
+      "title": "Orders",
+      "orderDetails": "Order Details",
+      "order": "Order",
+      "customerInfo": "Customer Information",
+      "name": "Name",
+      "email": "Email",
+      "items": "Order Items",
+      "quantity": "Quantity",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "total": "Total",
+      "statusUpdated": "Order status updated successfully",
+      "updateFailed": "Failed to update order status"
+    },
+    "products": {
+      "title": "Products",
+      "readOnlyNotice": "This is a demo catalog using dummyjson.com API. Product management functionality is read-only."
+    },
+    "promotions": {
+      "title": "Promotions",
+      "newPromotion": "New Promotion",
+      "editPromotion": "Edit Promotion",
+      "code": "Promo Code",
+      "type": "Type",
+      "value": "Value",
+      "minPurchase": "Minimum Purchase",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "description": "Description",
+      "create": "Create Promotion",
+      "update": "Update Promotion",
+      "cancel": "Cancel",
+      "confirmDelete": "Confirm Delete",
+      "deleteConfirmation": "Are you sure you want to delete the promotion code '{code}'?",
+      "delete": "Delete",
+      "createSuccess": "Promotion created successfully",
+      "updateSuccess": "Promotion updated successfully",
+      "deleteSuccess": "Promotion deleted successfully",
+      "saveFailed": "Failed to save promotion",
+      "deleteFailed": "Failed to delete promotion"
+    },
+    "settings": {
+      "title": "Settings",
+      "generalSettings": "General Settings",
+      "storeName": "Store Name",
+      "storeEmail": "Store Email",
+      "currency": "Currency",
+      "taxRate": "Tax Rate",
+      "shippingSettings": "Shipping Settings",
+      "freeShippingOver": "Free Shipping Over",
+      "flatRate": "Flat Rate Shipping"
+    }
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Information",
+    "warning": "Warning",
+    "invalidEmail": "Please enter a valid email address",
+    "subscribeSuccess": "You've been successfully subscribed to our newsletter",
+    "productAdded": "{title} has been added to your cart",
+    "productRemoved": "{title} has been removed from your cart",
+    "promoApplied": "Promo code {code} has been applied",
+    "addedToWishlist": "Product added to your wishlist",
+    "removedFromWishlist": "Product removed from your wishlist",
+    "paymentFailed": "Payment failed. Please try again."
+  }
+}
