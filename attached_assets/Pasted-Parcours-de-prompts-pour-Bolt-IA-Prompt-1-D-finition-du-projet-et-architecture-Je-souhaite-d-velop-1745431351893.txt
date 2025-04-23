@@ -1,0 +1,109 @@
+Parcours de prompts pour Bolt IA
+Prompt 1 : Définition du projet et architecture
+Je souhaite développer un site e-commerce avec Vue.js (Vite), Pinia, PrimeVue et Tailwind CSS. Voici les fonctionnalités principales :
+- Catalogue de produits avec filtres avancés (prix, dimensions, tags)
+- Pagination et lazy loading pour les produits
+- Panier d'achat avec intégration Stripe
+- Internationalisation (français/anglais)
+- Dashboard administrateur pour analyser les ventes et gérer les promotions
+
+Les données proviendront de l'API dummyjson.com.
+
+Pour commencer, peux-tu me proposer :
+1. L'architecture générale du projet
+2. La structure des dossiers
+3. Les dépendances à installer
+4. Une configuration initiale pour Vite, Pinia, PrimeVue et Tailwind
+Prompt 2 : Configuration de base et dépendances
+Maintenant, je souhaite initialiser le projet. Peux-tu me fournir :
+
+1. Les commandes exactes pour créer le projet avec Vite et installer toutes les dépendances nécessaires
+2. Les fichiers de configuration complets pour :
+   - Vite (vite.config.js)
+   - Tailwind (tailwind.config.js)
+   - PrimeVue (configuration dans main.js)
+   - Pinia (store setup)
+
+3. La structure complète du router.js avec toutes les routes nécessaires pour :
+   - Page d'accueil
+   - Catalogue produits
+   - Détail produit
+   - Panier
+   - Checkout
+   - Dashboard admin
+Prompt 3 : Implémentation du catalogue et des filtres
+Concentrons-nous sur le catalogue de produits et les filtres. Peux-tu me montrer :
+
+1. La structure du store Pinia pour gérer les produits
+2. Les composants Vue pour :
+   - La liste des produits avec pagination
+   - Les filtres (prix, dimensions, tags)
+   - La recherche
+
+3. L'implémentation du lazy loading des images
+
+4. Détaille l'intégration avec l'API dummyjson.com :
+   - Quels endpoints utiliser pour récupérer les produits
+   - Comment implémenter les filtres côté client
+   - Gestion des erreurs et états de chargement
+Prompt 4 : Système de panier et intégration Stripe
+Maintenant, développons le système de panier et l'intégration avec Stripe :
+
+1. Le store Pinia pour gérer le panier (ajout, suppression, modification des quantités)
+2. Les composants Vue pour afficher le panier et le processus de checkout
+3. L'intégration complète avec Stripe :
+   - Création du compte et configuration côté Stripe
+   - Implémentation du frontend avec Stripe Elements
+   - Sécurisation des transactions
+   - Gestion des webhooks pour les confirmations de paiement
+
+Assure-toi d'implémenter les meilleures pratiques de sécurité pour les paiements en ligne.
+Prompt 5 : Internationalisation
+Implémentons l'internationalisation du site en français et anglais :
+
+1. Configuration de vue-i18n
+2. Structure des fichiers de traduction
+3. Implémentation du sélecteur de langue
+4. Stratégie pour gérer les URLs et le SEO multilingue
+5. Traduction des contenus dynamiques (produits, descriptions)
+
+Montre-moi des exemples concrets d'utilisation de l'internationalisation dans les composants.
+Prompt 6 : Dashboard administrateur
+Développons le dashboard administrateur :
+
+1. Structure et composants du dashboard avec :
+   - Vue d'ensemble des ventes et chiffre d'affaires
+   - Graphiques et statistiques
+   - Liste des commandes par utilisateur
+   - Gestion des promotions
+
+2. Implémentation des graphiques avec une bibliothèque compatible Vue
+3. Création d'un système de promotions (création, modification, suppression)
+4. Gestion des permissions et sécurisation de l'accès au dashboard
+Prompt 7 : Sécurité et optimisations
+Finalisons le projet avec les aspects sécurité et optimisations :
+
+1. Implémentation d'un système d'authentification sécurisé
+2. Protection contre les attaques courantes (XSS, CSRF)
+3. Optimisations de performance :
+   - Code splitting
+   - Lazy loading des composants
+   - Optimisation des assets
+
+4. Tests unitaires et end-to-end
+5. Configuration pour le déploiement en production
+Prompt 8 : Documentation et déploiement
+Pour terminer, préparons la documentation et le déploiement :
+
+1. Documentation complète du projet :
+   - Structure et architecture
+   - Guide d'installation
+   - Guide de développement
+   - API endpoints utilisés
+
+2. Préparation au déploiement :
+   - Configuration pour l'environnement de production
+   - Stratégie de CI/CD
+   - Monitoring et logging
+
+3. Plan de maintenance et d'évolution future
