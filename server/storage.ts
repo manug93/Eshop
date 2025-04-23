@@ -104,9 +104,20 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
   
   constructor() {
+    // Create the session table using the provided SQL from the connect-pg-simple documentation
     this.sessionStore = new PostgresSessionStore({
       pool,
+      tableName: 'session',
       createTableIfMissing: true,
+      // Explicitly enable table creation
+      createTableSql: `
+        CREATE TABLE IF NOT EXISTS "session" (
+          "sid" varchar NOT NULL COLLATE "default",
+          "sess" json NOT NULL,
+          "expire" timestamp(6) NOT NULL,
+          CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+        )
+      `
     });
   }
 
