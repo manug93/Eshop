@@ -1,11 +1,19 @@
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { InsertProduct, InsertCategory, InsertPromotion, users, promotions } from "@shared/schema";
+import { 
+  InsertProduct, 
+  InsertCategory, 
+  InsertPromotion, 
+  users, 
+  promotions,
+  products,
+  orders
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
 
 // Admin middleware to check if the user is an admin
-export function isAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+export function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Not authenticated" });
   }

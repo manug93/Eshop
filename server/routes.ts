@@ -2,6 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
+import { setupI18n } from "./i18n";
+import { setupAdmin } from "./admin";
+import { db } from "./db";
+import { 
+  users, 
+  products,
+  categories, 
+  orders, 
+  orderItems, 
+  carts, 
+  cartItems,
+  wishlists,
+  promotions
+} from "@shared/schema";
+import { eq, and, or, like, desc, asc } from "drizzle-orm";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY, Stripe functionality will not work properly');
@@ -13,11 +29,201 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication, internationalization, and admin routes
+  setupAuth(app);
+  setupI18n(app);
+  setupAdmin(app);
+  
   // API routes for the e-commerce app
   
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+  
+  // Product routes
+  app.get("/api/products", async (req, res, next) => {
+    try {
+      const { limit = '20', offset = '0', category, search, sort } = req.query;
+      let query = db.select().from(products);
+      
+      // Apply category filter
+      if (category) {
+        // First get the category id
+        const [categoryRecord] = await db
+          .select()
+          .from(categories)
+          .where(eq(categories.slug, category as string));
+          
+        if (categoryRecord) {
+          query = query.where(eq(products.categoryId, categoryRecord.id));
+        }
+      }
+      
+      // Apply search filter
+      if (search) {
+        query = query.where(
+          or(
+            like(products.title, `%${search}%`),
+            like(products.description, `%${search}%`),
+            like(products.brand, `%${search}%`)
+          )
+        );
+      }
+      
+      // Apply sorting
+      if (sort) {
+        switch(sort) {
+          case 'price-asc':
+            query = query.orderBy(asc(products.price));
+            break;
+          case 'price-desc':
+            query = query.orderBy(desc(products.price));
+            break;
+          case 'rating-desc':
+            query = query.orderBy(desc(products.rating));
+            break;
+          case 'newest':
+            query = query.orderBy(desc(products.createdAt));
+            break;
+          default:
+            // Default sorting
+            query = query.orderBy(desc(products.featured), asc(products.title));
+        }
+      } else {
+        // Default sorting
+        query = query.orderBy(desc(products.featured), asc(products.title));
+      }
+      
+      // Apply pagination
+      query = query
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+      
+      const results = await query;
+      
+      // Get the total count for pagination
+      const [{ count }] = await db
+        .select({ count: db.fn.count(products.id) })
+        .from(products);
+      
+      res.json({
+        products: results,
+        total: Number(count),
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/products/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id));
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Category routes
+  app.get("/api/categories", async (req, res, next) => {
+    try {
+      const allCategories = await db.select().from(categories);
+      res.json(allCategories);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Cart routes
+  app.get("/api/cart", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Get the user's cart or create one if it doesn't exist
+      let cart = await storage.getCart(userId);
+      
+      if (!cart) {
+        cart = await storage.createCart({ userId });
+      }
+      
+      // Get the cart items with product details
+      const cartItemsWithProducts = await db
+        .select({
+          id: cartItems.id,
+          productId: cartItems.productId,
+          quantity: cartItems.quantity,
+          addedAt: cartItems.addedAt,
+          title: products.title,
+          price: products.price,
+          discountPercentage: products.discountPercentage,
+          thumbnail: products.thumbnail,
+          brand: products.brand
+        })
+        .from(cartItems)
+        .innerJoin(products, eq(cartItems.productId, products.id))
+        .where(eq(cartItems.cartId, cart.id));
+      
+      res.json({
+        cartId: cart.id,
+        items: cartItemsWithProducts,
+        itemCount: cartItemsWithProducts.reduce((sum, item) => sum + item.quantity, 0),
+        subtotal: cartItemsWithProducts.reduce((sum, item) => {
+          const discountedPrice = item.price * (1 - (item.discountPercentage || 0) / 100);
+          return sum + (discountedPrice * item.quantity);
+        }, 0)
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/cart/items", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = (req.user as any).id;
+      const { productId, quantity = 1 } = req.body;
+      
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID is required" });
+      }
+      
+      // Get the user's cart or create one
+      let cart = await storage.getCart(userId);
+      
+      if (!cart) {
+        cart = await storage.createCart({ userId });
+      }
+      
+      // Add item to cart
+      const cartItem = await storage.addCartItem({
+        cartId: cart.id,
+        productId,
+        quantity
+      });
+      
+      res.status(201).json(cartItem);
+    } catch (error) {
+      next(error);
+    }
   });
 
   // Stripe payment intent creation
