@@ -27,7 +27,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 // Initialize Stripe with the secret key
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2023-10-16" as const,
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -200,7 +200,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // If user is not authenticated, create a guest cart in memory
       // This allows non-authenticated users to still use the cart functionality
-      let items = [];
+      let items: {
+        id: number;
+        productId: number;
+        quantity: number;
+        title: string;
+        price: number;
+        thumbnail: string;
+      }[] = [];
       
       if (req.isAuthenticated()) {
         const userId = (req.user as any).id;
