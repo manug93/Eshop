@@ -1,21 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslations } from '@/hooks/use-translations';
+import { useCart, CartItem } from '@/hooks/use-cart';
 import { Loader2, Trash2, ShoppingCart } from "lucide-react";
-
-// CartItem interface
-interface CartItem {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
-  thumbnail: string;
-}
 
 export default function Cart() {
   const [_, setLocation] = useLocation();
@@ -24,111 +16,23 @@ export default function Cart() {
   const { t } = useTranslations();
   const [promoCode, setPromoCode] = useState("");
   
-  // État local pour les items du panier
-  const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
+  // Utiliser le hook centralisé pour le panier
+  const { 
+    cartItems, 
+    isLoading, 
+    subtotal,
+    updateQuantity, 
+    removeFromCart, 
+    clearCart 
+  } = useCart();
   
-  // Fetch cart items 
-  const { data: apiCartItems = [], isLoading } = useQuery({
-    queryKey: ['/api/cart/items'],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest('GET', '/api/cart/items');
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        // En cas d'erreur, retourner une liste vide
-        return [];
-      }
-    }
-  });
-  
-  // Utiliser useEffect pour synchroniser les données API avec l'état local
-  useEffect(() => {
-    if (apiCartItems && apiCartItems.length > 0) {
-      setLocalCartItems(apiCartItems);
-    }
-  }, [apiCartItems]);
-  
-  // Cette variable sera utilisée partout dans le composant
-  const cartItems = localCartItems;
-
-  // Mutation pour mettre à jour la quantité d'un article
-  const updateQuantityMutation = useMutation({
-    mutationFn: async ({ id, quantity }: { id: number, quantity: number }) => {
-      const response = await apiRequest('PUT', `/api/cart/items/${id}`, { quantity });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart/items'] });
-      toast({
-        title: t.quantityUpdated,
-        description: t.cartUpdatedSuccess,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: t.error,
-        description: t.errorUpdatingCart,
-        variant: "destructive",
-      });
-      console.error('Error updating quantity:', error);
-    }
-  });
-
-  // Mutation pour supprimer un article
-  const removeItemMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/cart/items/${id}`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart/items'] });
-      toast({
-        title: t.itemRemoved,
-        description: t.itemRemovedSuccess,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: t.error,
-        description: t.errorRemovingItem,
-        variant: "destructive",
-      });
-      console.error('Error removing item:', error);
-    }
-  });
-
-  // Mutation pour vider le panier
-  const clearCartMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/cart/items');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart/items'] });
-      toast({
-        title: t.cartCleared,
-        description: t.cartClearedSuccess,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: t.error,
-        description: t.errorClearingCart,
-        variant: "destructive",
-      });
-      console.error('Error clearing cart:', error);
-    }
-  });
-
   // Mutation pour appliquer un code promo
   const applyPromoCodeMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await apiRequest('POST', '/api/cart/promo', { code });
+      const response = await apiRequest('POST', '/api/apply-promo', { code });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart/items'] });
       toast({
         title: t.promoApplied,
         description: t.promoAppliedSuccess,
@@ -148,7 +52,9 @@ export default function Cart() {
   // Mutation pour le processus de commande
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/orders');
+      const response = await apiRequest('POST', '/api/create-payment-intent', { 
+        amount: calculateTotal() 
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -170,34 +76,6 @@ export default function Cart() {
       console.error('Error processing order:', error);
     }
   });
-
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    // Mettre à jour l'état local immédiatement pour une réactivité immédiate
-    setLocalCartItems(prev => 
-      prev.map(item => item.id === id ? {...item, quantity: newQuantity} : item)
-    );
-    
-    // Envoyer la mise à jour au serveur
-    updateQuantityMutation.mutate({ id, quantity: newQuantity });
-  };
-
-  const removeItem = (id: number) => {
-    // Mettre à jour l'état local immédiatement pour une réactivité immédiate
-    setLocalCartItems(prev => prev.filter(item => item.id !== id));
-    
-    // Envoyer la suppression au serveur
-    removeItemMutation.mutate(id);
-  };
-
-  const clearCart = () => {
-    // Vider le panier local immédiatement
-    setLocalCartItems([]);
-    
-    // Vider le panier sur le serveur
-    clearCartMutation.mutate();
-  };
   
   const applyPromoCode = () => {
     if (promoCode.trim()) {
@@ -226,22 +104,18 @@ export default function Cart() {
     checkoutMutation.mutate();
   };
 
-  const calculateSubtotal = () => {
-    return cartItems.reduce((total: number, item: CartItem) => total + (item.price * item.quantity), 0);
-  };
-
   const calculateTax = () => {
-    // Assuming 8% tax rate
-    return calculateSubtotal() * 0.08;
+    // Supposer un taux de taxe de 8%
+    return subtotal * 0.08;
   };
 
   const calculateShipping = () => {
-    // Free shipping over $100, otherwise $10
-    return calculateSubtotal() > 100 ? 0 : 10;
+    // Livraison gratuite au-dessus de 100$, sinon 10$
+    return subtotal > 100 ? 0 : 10;
   };
 
   const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax() + calculateShipping();
+    return subtotal + calculateTax() + calculateShipping();
   };
 
   if (isLoading) {
@@ -304,7 +178,6 @@ export default function Cart() {
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                   className="px-3 py-1 text-gray-600 hover:text-gray-800"
-                                  disabled={updateQuantityMutation.isPending}
                                 >
                                   -
                                 </button>
@@ -312,7 +185,6 @@ export default function Cart() {
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                   className="px-3 py-1 text-gray-600 hover:text-gray-800"
-                                  disabled={updateQuantityMutation.isPending}
                                 >
                                   +
                                 </button>

@@ -195,6 +195,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get cart items
+  app.get("/api/cart/items", async (req, res, next) => {
+    try {
+      // If user is not authenticated, create a guest cart in memory
+      // This allows non-authenticated users to still use the cart functionality
+      let items = [];
+      
+      if (req.isAuthenticated()) {
+        const userId = (req.user as any).id;
+        
+        // Get the user's cart or create one
+        let cart = await storage.getCart(userId);
+        
+        if (cart) {
+          // Get the cart items with product details
+          items = await db
+            .select({
+              id: cartItems.id,
+              productId: cartItems.productId,
+              quantity: cartItems.quantity,
+              title: products.title,
+              price: products.price,
+              thumbnail: products.thumbnail,
+            })
+            .from(cartItems)
+            .innerJoin(products, eq(cartItems.productId, products.id))
+            .where(eq(cartItems.cartId, cart.id));
+        }
+      }
+      
+      res.json(items);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Add item to cart
   app.post("/api/cart/items", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
@@ -202,9 +239,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as any).id;
-      const { productId, quantity = 1 } = req.body;
+      const { id, title, price, thumbnail, quantity = 1 } = req.body;
       
-      if (!productId) {
+      if (!id) {
         return res.status(400).json({ message: "Product ID is required" });
       }
       
@@ -218,11 +255,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add item to cart
       const cartItem = await storage.addCartItem({
         cartId: cart.id,
-        productId,
+        productId: id,
         quantity
       });
       
-      res.status(201).json(cartItem);
+      // Return the item with product details
+      res.status(201).json({
+        id: cartItem.id,
+        productId: id,
+        quantity: cartItem.quantity,
+        title,
+        price,
+        thumbnail
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update cart item quantity
+  app.put("/api/cart/items/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = (req.user as any).id;
+      const itemId = parseInt(req.params.id);
+      const { quantity } = req.body;
+      
+      if (!quantity || quantity < 1) {
+        return res.status(400).json({ message: "Valid quantity is required" });
+      }
+      
+      // Verify the item belongs to the user's cart
+      const cart = await storage.getCart(userId);
+      if (!cart) {
+        return res.status(404).json({ message: "Cart not found" });
+      }
+      
+      const [cartItem] = await db
+        .select()
+        .from(cartItems)
+        .where(
+          and(
+            eq(cartItems.id, itemId),
+            eq(cartItems.cartId, cart.id)
+          )
+        );
+      
+      if (!cartItem) {
+        return res.status(404).json({ message: "Cart item not found" });
+      }
+      
+      // Update the item quantity
+      const updatedItem = await storage.updateCartItemQuantity(itemId, quantity);
+      
+      res.json(updatedItem);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Remove item from cart
+  app.delete("/api/cart/items/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = (req.user as any).id;
+      const itemId = parseInt(req.params.id);
+      
+      // Verify the item belongs to the user's cart
+      const cart = await storage.getCart(userId);
+      if (!cart) {
+        return res.status(404).json({ message: "Cart not found" });
+      }
+      
+      const [cartItem] = await db
+        .select()
+        .from(cartItems)
+        .where(
+          and(
+            eq(cartItems.id, itemId),
+            eq(cartItems.cartId, cart.id)
+          )
+        );
+      
+      if (!cartItem) {
+        return res.status(404).json({ message: "Cart item not found" });
+      }
+      
+      // Remove the item
+      await storage.removeCartItem(itemId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Clear cart (remove all items)
+  app.delete("/api/cart/items", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Get the user's cart
+      const cart = await storage.getCart(userId);
+      if (!cart) {
+        return res.status(404).json({ message: "Cart not found" });
+      }
+      
+      // Clear all items
+      await storage.clearCart(cart.id);
+      
+      res.json({ success: true });
     } catch (error) {
       next(error);
     }
