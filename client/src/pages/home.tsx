@@ -217,9 +217,9 @@ const Home = () => {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+            <h2 className="text-3xl font-bold mb-4">{t.featuredProducts}</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore our handpicked selection of the best products
+              {t.featuredProductsSubtitle}
             </p>
           </div>
           
@@ -271,38 +271,58 @@ const Home = () => {
           <div className="text-center mt-10">
             <Button 
               onClick={() => setLocation('/products')}
+              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all"
             >
-              Shop All Products
+              {t.viewAllProducts}
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-4">Join Our Newsletter</h2>
-              <p className="text-gray-300 mb-8">
-                Subscribe to our newsletter and be the first to know about new products, 
-                special offers, and exclusive deals.
-              </p>
-            </div>
-            <div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  className="px-4 py-3 rounded-md flex-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Button>Subscribe</Button>
+      {/* Call to Action - Modernized */}
+      <section className="py-20 relative overflow-hidden">
+        {/* Background gradient and decorative elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
+          <div className="absolute inset-0 bg-grid-white/5 bg-[size:30px_30px] opacity-20"></div>
+          <div className="absolute top-20 right-20 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-3000"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Content container with glass effect */}
+          <div className="rounded-2xl backdrop-blur-lg bg-white/10 p-8 md:p-12 shadow-xl border border-white/10">
+            <div className="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">{t.newsletterTitle}</h2>
+                <p className="text-gray-200 mb-8 text-lg font-light leading-relaxed">
+                  {t.newsletterText}
+                </p>
               </div>
-              <p className="text-gray-400 text-sm mt-4">
-                We respect your privacy. Unsubscribe at any time.
-              </p>
+              <div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <input 
+                    type="email" 
+                    placeholder={t.emailPlaceholder} 
+                    className="px-6 py-4 rounded-full flex-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white/90 placeholder:text-gray-500"
+                  />
+                  <Button 
+                    className="rounded-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all px-8 py-4 font-medium text-white"
+                  >
+                    {t.subscribeButton}
+                  </Button>
+                </div>
+                <p className="text-gray-300 text-sm mt-4 ml-4">
+                  {t.privacyText}
+                </p>
+              </div>
             </div>
           </div>
+          
+          {/* Decorative stars */}
+          <div className="absolute top-12 left-1/4 w-1 h-1 bg-white rounded-full"></div>
+          <div className="absolute top-36 right-1/3 w-2 h-2 bg-white rounded-full"></div>
+          <div className="absolute bottom-20 left-1/2 w-1 h-1 bg-white rounded-full"></div>
+          <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-white rounded-full"></div>
         </div>
       </section>
     </div>
