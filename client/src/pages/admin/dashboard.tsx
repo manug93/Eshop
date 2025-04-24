@@ -201,7 +201,7 @@ export default function AdminDashboard() {
 
   // Handle order status update
   const handleUpdateOrderStatus = (orderId: number, newStatus: string) => {
-    updateOrderStatusMutation.mutate({ orderId, newStatus });
+    updateOrderStatusMutation.mutate({ orderId, status: newStatus });
   };
 
   // Handle product deletion

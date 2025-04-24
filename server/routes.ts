@@ -535,12 +535,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if the payment was successful
       if (paymentIntent.status === "succeeded") {
-        // In a real app, you would create an order in your database here
-        res.json({
-          success: true,
-          orderId: `order-${Date.now()}`, // Mock order ID
-          message: "Payment successful"
-        });
+        try {
+          // Create a real order in the database
+          if (!req.isAuthenticated()) {
+            return res.status(401).json({ message: "User must be logged in to create an order" });
+          }
+
+          const userId = (req.user as any).id;
+          
+          // Get the user's cart
+          const cart = await storage.getCart(userId);
+          if (!cart) {
+            return res.status(404).json({ message: "Cart not found" });
+          }
+          
+          // Get cart items
+          const cartItemsTable = cartItems;
+          const cartItems = await db
+            .select({
+              id: cartItemsTable.id,
+              productId: cartItemsTable.productId,
+              quantity: cartItemsTable.quantity,
+              title: products.title,
+              price: products.price
+            })
+            .from(cartItemsTable)
+            .innerJoin(products, eq(cartItemsTable.productId, products.id))
+            .where(eq(cartItemsTable.cartId, cart.id));
+          
+          if (cartItems.length === 0) {
+            return res.status(400).json({ message: "Cannot create order with empty cart" });
+          }
+          
+          // Calculate totals
+          const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          const tax = total * 0.1; // 10% tax
+          const shipping = 5.99; // Fixed shipping cost
+          
+          // Create the order
+          const order = await storage.createOrder({
+            userId,
+            status: "completed",
+            total,
+            tax,
+            shipping,
+            paymentIntentId,
+            shippingAddress: null // No shipping address for now
+          });
+          
+          // Create order items
+          for (const item of cartItems) {
+            await storage.createOrderItem({
+              orderId: order.id,
+              productId: item.productId,
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+              subtotal: item.price * item.quantity
+            });
+          }
+          
+          // Clear the cart
+          await storage.clearCart(cart.id);
+          
+          // Return success with the real order ID
+          res.json({
+            success: true,
+            orderId: order.id,
+            message: "Payment successful and order created"
+          });
+        } catch (error: any) {
+          console.error("Error creating order:", error);
+          res.status(500).json({ 
+            success: false, 
+            message: "Payment was successful but there was an error creating your order",
+            error: error.message
+          });
+        }
       } else {
         res.json({
           success: false,
