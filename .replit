@@ -40,3 +40,12 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Rebase"
+mode = "sequential"
+author = 19942054
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git status"
