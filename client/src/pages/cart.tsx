@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslations } from '@/hooks/use-translations';
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2, ShoppingCart } from "lucide-react";
 
 // CartItem interface
 interface CartItem {
@@ -24,8 +24,11 @@ export default function Cart() {
   const { t } = useTranslations();
   const [promoCode, setPromoCode] = useState("");
   
+  // État local pour les items du panier
+  const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
+  
   // Fetch cart items 
-  const { data: cartItems = [], isLoading } = useQuery({
+  const { data: apiCartItems = [], isLoading } = useQuery({
     queryKey: ['/api/cart/items'],
     queryFn: async () => {
       try {
@@ -33,33 +36,21 @@ export default function Cart() {
         const data = await response.json();
         return data;
       } catch (error) {
-        // Si l'API échoue, on revient à des données locales pour la démo
-        return [
-          {
-            id: 1,
-            title: "iPhone 9",
-            price: 549,
-            quantity: 1,
-            thumbnail: "https://placehold.co/300x300/4F46E5/FFFFFF.png?text=iPhone+9"
-          },
-          {
-            id: 2,
-            title: "iPhone X",
-            price: 899,
-            quantity: 2,
-            thumbnail: "https://placehold.co/300x300/8B5CF6/FFFFFF.png?text=iPhone+X"
-          },
-          {
-            id: 3,
-            title: "Samsung Universe 9",
-            price: 1249,
-            quantity: 1,
-            thumbnail: "https://placehold.co/300x300/EC4899/FFFFFF.png?text=Samsung"
-          }
-        ];
+        // En cas d'erreur, retourner une liste vide
+        return [];
       }
     }
   });
+  
+  // Utiliser useEffect pour synchroniser les données API avec l'état local
+  useEffect(() => {
+    if (apiCartItems && apiCartItems.length > 0) {
+      setLocalCartItems(apiCartItems);
+    }
+  }, [apiCartItems]);
+  
+  // Cette variable sera utilisée partout dans le composant
+  const cartItems = localCartItems;
 
   // Mutation pour mettre à jour la quantité d'un article
   const updateQuantityMutation = useMutation({
@@ -182,14 +173,29 @@ export default function Cart() {
 
   const updateQuantity = (id: number, newQuantity: number) => {
     if (newQuantity < 1) return;
+    
+    // Mettre à jour l'état local immédiatement pour une réactivité immédiate
+    setLocalCartItems(prev => 
+      prev.map(item => item.id === id ? {...item, quantity: newQuantity} : item)
+    );
+    
+    // Envoyer la mise à jour au serveur
     updateQuantityMutation.mutate({ id, quantity: newQuantity });
   };
 
   const removeItem = (id: number) => {
+    // Mettre à jour l'état local immédiatement pour une réactivité immédiate
+    setLocalCartItems(prev => prev.filter(item => item.id !== id));
+    
+    // Envoyer la suppression au serveur
     removeItemMutation.mutate(id);
   };
 
   const clearCart = () => {
+    // Vider le panier local immédiatement
+    setLocalCartItems([]);
+    
+    // Vider le panier sur le serveur
     clearCartMutation.mutate();
   };
   
@@ -313,10 +319,15 @@ export default function Cart() {
                               </div>
                               <button
                                 onClick={() => removeItem(item.id)}
-                                className="text-sm text-red-600 hover:text-red-800"
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors duration-200"
                                 disabled={removeItemMutation.isPending}
+                                aria-label={t.remove}
                               >
-                                {t.remove}
+                                {removeItemMutation.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
                               </button>
                             </div>
                           </div>
@@ -328,24 +339,27 @@ export default function Cart() {
               </div>
               <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
                 <div className="flex justify-between">
-                  <button
+                  <Button 
                     onClick={clearCart}
-                    className="text-sm text-red-600 hover:text-red-800"
+                    variant="outline"
+                    className="flex items-center text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    size="sm"
                     disabled={clearCartMutation.isPending}
                   >
                     {clearCartMutation.isPending ? (
-                      <span className="flex items-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t.clearing}
-                      </span>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      t.clearCart
+                      <Trash2 className="mr-2 h-4 w-4" />
                     )}
-                  </button>
+                    {t.clearCart}
+                  </Button>
                   <Button
                     onClick={() => setLocation('/products')}
                     variant="outline"
+                    className="flex items-center"
+                    size="sm"
                   >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
                     {t.continueShopping}
                   </Button>
                 </div>
