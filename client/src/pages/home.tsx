@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/hooks/use-translations";
+import { useCart } from "@/hooks/use-cart";
 
 // Product interface
 interface Product {
@@ -20,6 +21,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [_, setLocation] = useLocation();
   const { t } = useTranslations();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     // Fetch featured products and categories
@@ -303,7 +305,23 @@ const Home = () => {
                     {/* Quick action buttons that appear on hover */}
                     <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                        <Button className="bg-white hover:bg-gray-100 text-gray-900 rounded-full shadow-md px-6">
+                        <Button 
+                          className="bg-white hover:bg-gray-100 text-gray-900 rounded-full shadow-md px-6"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent navigation to product detail
+                            addToCart({
+                              id: product.id,
+                              title: product.title,
+                              price: product.price,
+                              thumbnail: product.thumbnail || `https://placehold.co/400x300/${
+                                productColorIndex === 0 ? '4F46E5' : 
+                                productColorIndex === 1 ? '8B5CF6' : 
+                                productColorIndex === 2 ? 'EC4899' : 
+                                productColorIndex === 3 ? 'F59E0B' : '10B981'
+                              }/${textColor}.png?text=Product+${product.id}`
+                            });
+                          }}
+                        >
                           {t.addToCart}
                         </Button>
                       </div>

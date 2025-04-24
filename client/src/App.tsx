@@ -23,6 +23,7 @@ import AdminDashboard from "@/pages/admin/dashboard";
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const { t } = useTranslations();
+  const { totalItems = 0 } = useCart();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,7 +38,11 @@ function Layout({ children }: { children: React.ReactNode }) {
               <a href="/products" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">{t.products}</a>
               <a href="/cart" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium relative">
                 {t.cart}
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {totalItems}
+                  </span>
+                )}
               </a>
               {user ? (
                 <div className="flex items-center space-x-4">
@@ -195,10 +200,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </CartProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
