@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/hooks/use-cart";
+import { useTranslations } from "@/hooks/use-translations";
 
 // Product interface
 interface Product {
@@ -28,6 +30,8 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { t } = useTranslations();
 
   useEffect(() => {
     // Fetch product details
@@ -70,10 +74,18 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // In a real app, this would dispatch to a cart state/context
+    // Use the addToCart function from useCart hook
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      thumbnail: product.thumbnail,
+      quantity
+    });
+    
     toast({
-      title: "Added to Cart",
-      description: `${product.title} has been added to your cart`,
+      title: t.itemAdded || "Added to Cart",
+      description: `${product.title} ${t.hasBeenAddedToCart || "has been added to your cart"}`,
     });
   };
 
