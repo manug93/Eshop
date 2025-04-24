@@ -45,7 +45,7 @@ const Products = () => {
         setProducts(productsData.products);
 
         // Fetch categories
-        const categoriesResponse = await fetch('https://dummyjson.com/products/categories');
+        const categoriesResponse = await fetch('https://dummyjson.com/products/category-list');
         const categoriesData = await categoriesResponse.json();
         
         // Create categories with count
