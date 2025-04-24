@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
-    mutationFn: async (item: CartItem) => {
+    mutationFn: async (item: CartItem & { description?: string, brand?: string, category?: string }) => {
       const response = await apiRequest('POST', '/api/cart/items', item);
       return response.json();
     },

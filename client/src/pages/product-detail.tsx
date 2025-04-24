@@ -79,6 +79,9 @@ const ProductDetail = () => {
       id: product.id,
       title: product.title,
       price: product.price,
+      description: product.description,
+      brand: product.brand,
+      category: product.category,
       thumbnail: product.thumbnail,
       quantity
     });

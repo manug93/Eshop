@@ -313,6 +313,9 @@ const Home = () => {
                               id: product.id,
                               title: product.title,
                               price: product.price,
+                              description: "Product imported from external API",
+                              brand: product.brand || "Unknown",
+                              category: product.category || "other",
                               thumbnail: product.thumbnail || `https://placehold.co/400x300/${
                                 productColorIndex === 0 ? '4F46E5' : 
                                 productColorIndex === 1 ? '8B5CF6' : 
