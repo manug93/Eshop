@@ -285,7 +285,7 @@ export default function Cart() {
                   <ul className="-my-6 divide-y divide-gray-200">
                     {cartItems.map((item: CartItem) => (
                       <li key={item.id} className="cart-item py-6">
-                        <div className="flex items-center">
+                        <div className="flex items-center relative">
                           <img
                             src={item.thumbnail}
                             alt={item.title}
@@ -299,7 +299,7 @@ export default function Cart() {
                               </p>
                             </div>
                             <p className="mt-1 text-sm text-gray-500">${item.price.toFixed(2)} {t.each}</p>
-                            <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center mt-4">
                               <div className="flex items-center border rounded-md">
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -317,20 +317,20 @@ export default function Cart() {
                                   +
                                 </button>
                               </div>
-                              <button
-                                onClick={() => removeItem(item.id)}
-                                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors duration-200"
-                                disabled={removeItemMutation.isPending}
-                                aria-label={t.remove}
-                              >
-                                {removeItemMutation.isPending ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </button>
                             </div>
                           </div>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="absolute top-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors duration-200 shadow-sm"
+                            disabled={removeItemMutation.isPending}
+                            aria-label={t.remove}
+                          >
+                            {removeItemMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </li>
                     ))}

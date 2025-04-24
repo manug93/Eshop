@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { useTranslations } from "@/hooks/use-translations";
+import { CartProvider, useCart } from "@/hooks/use-cart";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
