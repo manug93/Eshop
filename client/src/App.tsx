@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
+import { useTranslations } from "@/hooks/use-translations";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
@@ -20,31 +21,31 @@ import AdminDashboard from "@/pages/admin/dashboard";
 // Layout component with navigation
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
+  const { t } = useTranslations();
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <a href="/" className="text-2xl font-bold text-primary">E-Shop</a>
-              <LanguageSwitcher />
             </div>
-            <nav className="flex space-x-8">
-              <a href="/" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">Home</a>
-              <a href="/products" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">Products</a>
+            <nav className="flex items-center space-x-4">
+              <a href="/" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">{t.home}</a>
+              <a href="/products" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">{t.products}</a>
               <a href="/cart" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium relative">
-                Cart
+                {t.cart}
                 <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
               </a>
               {user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-700">
-                    {user.firstName ? `Hello, ${user.firstName}` : `Hello, ${user.username}`}
+                    {user.firstName ? `${t.hello}, ${user.firstName}` : `${t.hello}, ${user.username}`}
                   </span>
                   {user.isAdmin && (
                     <a href="/admin/dashboard" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
-                      Admin
+                      {t.admin}
                     </a>
                   )}
                   <button 
@@ -52,14 +53,15 @@ function Layout({ children }: { children: React.ReactNode }) {
                     className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium"
                     disabled={logoutMutation.isPending}
                   >
-                    {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    {logoutMutation.isPending ? t.loggingOut : t.logout}
                   </button>
                 </div>
               ) : (
                 <a href="/auth" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
-                  Login / Register
+                  {t.login}
                 </a>
               )}
+              <LanguageSwitcher />
             </nav>
           </div>
         </div>
