@@ -115,7 +115,7 @@ const Home = () => {
                 <div className="absolute -top-10 -left-16 w-40 h-40 bg-white/10 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-white/20 transform rotate-12 animate-float-slow hidden md:block">
                   <div className="rounded-xl bg-indigo-100 h-full w-full overflow-hidden">
                     <img 
-                      src="https://i.dummyjson.com/data/products/1/thumbnail.jpg" 
+                      src="https://via.placeholder.com/150/3B82F6/FFFFFF?text=Phone" 
                       alt="Phone" 
                       className="object-cover h-full w-full"
                     />
@@ -127,7 +127,7 @@ const Home = () => {
                   <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-pink-500 rounded-full opacity-30 blur-xl"></div>
                   <div className="relative rounded-2xl bg-white overflow-hidden h-64 w-64 md:h-80 md:w-80">
                     <img 
-                      src="https://i.dummyjson.com/data/products/7/thumbnail.jpg" 
+                      src="https://via.placeholder.com/300/9333EA/FFFFFF?text=Featured+Product" 
                       alt="Featured Product"
                       className="h-full w-full object-cover"
                     />
@@ -142,7 +142,7 @@ const Home = () => {
                 <div className="absolute -bottom-8 -right-12 w-36 h-36 bg-white/10 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-white/20 transform -rotate-6 animate-float hidden md:block">
                   <div className="rounded-xl bg-amber-50 h-full w-full overflow-hidden">
                     <img 
-                      src="https://i.dummyjson.com/data/products/5/thumbnail.jpg" 
+                      src="https://via.placeholder.com/150/F59E0B/FFFFFF?text=Laptop" 
                       alt="Laptop" 
                       className="object-cover h-full w-full"
                     />
@@ -232,7 +232,7 @@ const Home = () => {
               >
                 <div className="product-card-image">
                   <img
-                    src={product.thumbnail}
+                    src={`https://via.placeholder.com/300x200/${Math.floor(Math.random()*16777215).toString(16)}/${product.id % 2 === 0 ? 'FFFFFF' : '000000'}?text=Product+${product.id}`}
                     alt={product.title}
                     loading="lazy"
                   />
