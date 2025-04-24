@@ -154,4 +154,29 @@ export function setupAuth(app: Express) {
     }
     res.json(req.user);
   });
+  
+  // Get orders for current user
+  app.get("/api/user/orders", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Get user orders
+      const userOrders = await storage.getOrders(userId);
+      
+      // For each order, get the order items
+      const ordersWithItems = await Promise.all(
+        userOrders.map(async (order) => {
+          const items = await storage.getOrderItems(order.id);
+          return {
+            ...order,
+            items
+          };
+        })
+      );
+      
+      res.json(ordersWithItems);
+    } catch (error) {
+      next(error);
+    }
+  });
 }

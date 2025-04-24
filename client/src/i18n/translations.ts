@@ -8,6 +8,8 @@ export const translations = {
     login: "Login / Register",
     logout: "Logout",
     admin: "Admin",
+    myOrders: "My Orders",
+    myAccount: "My Account",
     hello: "Hello",
     loggingOut: "Logging out...",
     
@@ -198,6 +200,8 @@ export const translations = {
     login: "Connexion / Inscription",
     logout: "Déconnexion",
     admin: "Admin",
+    myOrders: "Mes Commandes",
+    myAccount: "Mon Compte",
     hello: "Bonjour",
     loggingOut: "Déconnexion en cours...",
     
