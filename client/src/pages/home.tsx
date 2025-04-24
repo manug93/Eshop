@@ -162,50 +162,76 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t.shopByCategory}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+      {/* Categories - Modernized */}
+      <section className="py-20 relative overflow-hidden">
+        {/* Background and decorative elements */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white">
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute top-10 left-10 w-40 h-40 bg-purple-400 rounded-full filter blur-3xl opacity-20"></div>
+            <div className="absolute bottom-10 right-10 w-60 h-60 bg-blue-300 rounded-full filter blur-3xl opacity-10"></div>
+          </div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">{t.shopByCategory}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
               {t.shopByCategorySubtitle}
             </p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1 cursor-pointer"
-                onClick={() => setLocation(`/products?category=${category}`)}
-              >
-                <div className="aspect-square bg-gray-200 flex items-center justify-center p-6">
-                  <span className="text-3xl">
-                    {category === 'smartphones' && '📱'}
-                    {category === 'laptops' && '💻'}
-                    {category === 'fragrances' && '🧴'}
-                    {category === 'skincare' && '✨'}
-                    {category === 'groceries' && '🛒'}
-                    {category === 'home-decoration' && '🏠'}
-                    {category !== 'smartphones' && 
-                     category !== 'laptops' && 
-                     category !== 'fragrances' && 
-                     category !== 'skincare' && 
-                     category !== 'groceries' && 
-                     category !== 'home-decoration' && '🛍️'}
-                  </span>
+            {categories.map((category, index) => {
+              // Define a color for each category
+              const colors = [
+                { bg: 'bg-gradient-to-br from-pink-500 to-rose-500', text: 'text-white' },
+                { bg: 'bg-gradient-to-br from-blue-500 to-indigo-600', text: 'text-white' },
+                { bg: 'bg-gradient-to-br from-amber-400 to-orange-500', text: 'text-white' },
+                { bg: 'bg-gradient-to-br from-emerald-500 to-green-600', text: 'text-white' },
+                { bg: 'bg-gradient-to-br from-purple-500 to-violet-600', text: 'text-white' },
+                { bg: 'bg-gradient-to-br from-sky-400 to-cyan-500', text: 'text-white' },
+              ];
+              
+              const colorIndex = index % colors.length;
+              const { bg, text } = colors[colorIndex];
+              
+              return (
+                <div 
+                  key={index}
+                  className="group relative bg-white rounded-2xl shadow-md overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+                  onClick={() => setLocation(`/products?category=${category}`)}
+                >
+                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity ${bg}`}></div>
+                  <div className="aspect-square bg-gray-100 flex items-center justify-center p-6 relative z-10 transition-all group-hover:bg-opacity-10">
+                    <span className="text-4xl transition-transform group-hover:scale-125 duration-300">
+                      {category === 'smartphones' && '📱'}
+                      {category === 'laptops' && '💻'}
+                      {category === 'fragrances' && '🧴'}
+                      {category === 'skincare' && '✨'}
+                      {category === 'groceries' && '🛒'}
+                      {category === 'home-decoration' && '🏠'}
+                      {category !== 'smartphones' && 
+                       category !== 'laptops' && 
+                       category !== 'fragrances' && 
+                       category !== 'skincare' && 
+                       category !== 'groceries' && 
+                       category !== 'home-decoration' && '🛍️'}
+                    </span>
+                  </div>
+                  <div className="p-5 text-center relative z-10">
+                    <h3 className={`font-medium capitalize transition-colors duration-300 group-hover:${text}`}>
+                      {typeof category === 'string' ? category.replace('-', ' ') : category}
+                    </h3>
+                  </div>
                 </div>
-                <div className="p-4 text-center">
-                  <h3 className="font-medium capitalize">{typeof category === 'string' ? category.replace('-', ' ') : category}</h3>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
-          <div className="text-center mt-10">
+          <div className="text-center mt-14">
             <Button 
               onClick={() => setLocation('/products')}
-              variant="outline"
+              className="px-8 py-3 font-medium rounded-full bg-white text-gray-800 hover:bg-gray-100 border border-gray-200 shadow-sm hover:shadow transition-all"
             >
               {t.viewAllCategories}
             </Button>
@@ -213,65 +239,116 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t.featuredProducts}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+      {/* Featured Products - Modernized */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Background and decorative elements */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 to-white">
+          <div className="absolute right-0 top-[30%] w-80 h-80 bg-indigo-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+          <div className="absolute -left-20 bottom-0 w-80 h-80 bg-purple-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium mb-4">
+              {t.featuredProducts}
+            </span>
+            <h2 className="text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
+              {t.featuredProducts}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
               {t.featuredProductsSubtitle}
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <div 
-                key={product.id}
-                className="product-card cursor-pointer"
-                onClick={() => setLocation(`/products/${product.id}`)}
-              >
-                <div className="product-card-image">
-                  <img
-                    src={`https://via.placeholder.com/300x200/${Math.floor(Math.random()*16777215).toString(16)}/${product.id % 2 === 0 ? 'FFFFFF' : '000000'}?text=Product+${product.id}`}
-                    alt={product.title}
-                    loading="lazy"
-                  />
-                </div>
-                <div className="product-card-content">
-                  <h3 className="product-card-title">{product.title}</h3>
-                  <p className="product-card-brand">{product.brand}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center">
-                      {product.discountPercentage > 0 ? (
-                        <>
-                          <span className="product-price">
-                            ${(product.price * (1 - product.discountPercentage / 100)).toFixed(2)}
-                          </span>
-                          <span className="product-price-original">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => {
+              // Generate a consistent color based on product id
+              const productColorIndex = product.id % 5;
+              const productColors = [
+                'from-blue-500 to-indigo-600',
+                'from-violet-500 to-purple-600',
+                'from-rose-500 to-pink-600',
+                'from-amber-500 to-orange-600',
+                'from-emerald-500 to-green-600'
+              ];
+              const productColor = productColors[productColorIndex];
+              const textColor = product.id % 2 === 0 ? 'FFFFFF' : '000000';
+              
+              return (
+                <div 
+                  key={product.id}
+                  className="group relative rounded-2xl bg-white overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  onClick={() => setLocation(`/products/${product.id}`)}
+                >
+                  {/* Product image with hover effect */}
+                  <div className="relative overflow-hidden aspect-[4/3]">
+                    <img
+                      src={`https://via.placeholder.com/400x300/${Math.floor(Math.random()*16777215).toString(16)}/${textColor}?text=Product+${product.id}`}
+                      alt={product.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    
+                    {/* Discount badge */}
+                    {product.discountPercentage > 0 && (
+                      <div className={`absolute top-4 right-4 rounded-full bg-gradient-to-r ${productColor} text-white text-xs font-bold px-3 py-1.5 shadow-lg`}>
+                        {Math.round(product.discountPercentage)}% OFF
+                      </div>
+                    )}
+                    
+                    {/* Quick action buttons that appear on hover */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                        <Button className="bg-white hover:bg-gray-100 text-gray-900 rounded-full shadow-md px-6">
+                          {t.addToCart}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Product info */}
+                  <div className="p-5">
+                    <div className="mb-2">
+                      <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
+                      <h3 className="font-medium text-lg truncate">{product.title}</h3>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center">
+                        {product.discountPercentage > 0 ? (
+                          <>
+                            <span className={`text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r ${productColor}`}>
+                              ${(product.price * (1 - product.discountPercentage / 100)).toFixed(2)}
+                            </span>
+                            <span className="ml-2 text-sm text-gray-500 line-through">
+                              ${product.price.toFixed(2)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className={`text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r ${productColor}`}>
                             ${product.price.toFixed(2)}
                           </span>
-                        </>
-                      ) : (
-                        <span className="product-price">
-                          ${product.price.toFixed(2)}
+                        )}
+                      </div>
+                      
+                      {/* Rating stars */}
+                      <div className="flex items-center">
+                        <span className="text-yellow-400 flex">
+                          {'★'.repeat(Math.floor(4 + (product.id % 2)))}
+                          {'☆'.repeat(5 - Math.floor(4 + (product.id % 2)))}
                         </span>
-                      )}
+                      </div>
                     </div>
-                    {product.discountPercentage > 0 && (
-                      <span className="product-discount-badge">
-                        {Math.round(product.discountPercentage)}% OFF
-                      </span>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
-          <div className="text-center mt-10">
+          <div className="text-center mt-16">
             <Button 
               onClick={() => setLocation('/products')}
-              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white transition-all px-8 py-3 rounded-full shadow-md hover:shadow-lg"
             >
               {t.viewAllProducts}
             </Button>
