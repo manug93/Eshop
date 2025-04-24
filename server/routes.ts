@@ -18,7 +18,7 @@ import {
   wishlists,
   promotions
 } from "@shared/schema";
-import { eq, and, or, like, desc, asc } from "drizzle-orm";
+import { eq, and, or, like, desc, asc, sql } from "drizzle-orm";
 
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the total count for pagination
       const [{ count }] = await db
-        .select({ count: db.fn.count(products.id) })
+        .select({ count: sql`count(${products.id})` })
         .from(products);
       
       res.json({
