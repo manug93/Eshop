@@ -179,4 +179,163 @@ export function setupAuth(app: Express) {
       next(error);
     }
   });
+
+  // Update user profile
+  app.put("/api/user/profile", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { firstName, lastName, email, preferredLanguage } = req.body;
+      
+      // Update only allowed fields
+      const userData = {
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(email !== undefined && { email }),
+        ...(preferredLanguage !== undefined && { preferredLanguage })
+      };
+      
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, userData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get user addresses
+  app.get("/api/user/addresses", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Get user addresses
+      const addresses = await storage.getUserAddresses(userId);
+      res.json(addresses);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get user's default address
+  app.get("/api/user/addresses/default", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Get default address
+      const address = await storage.getUserDefaultAddress(userId);
+      
+      if (!address) {
+        return res.status(404).json({ message: "No default address found" });
+      }
+      
+      res.json(address);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Add new address
+  app.post("/api/user/addresses", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Create new address
+      const address = await storage.createAddress({
+        ...req.body,
+        userId
+      });
+      
+      res.status(201).json(address);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update address
+  app.put("/api/user/addresses/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const addressId = parseInt(req.params.id);
+      
+      // Verify address belongs to user
+      const existingAddress = await storage.getAddressById(addressId);
+      
+      if (!existingAddress) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      
+      if (existingAddress.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this address" });
+      }
+      
+      // Update address
+      const updatedAddress = await storage.updateAddress(addressId, req.body);
+      
+      if (!updatedAddress) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      
+      res.json(updatedAddress);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete address
+  app.delete("/api/user/addresses/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const addressId = parseInt(req.params.id);
+      
+      // Verify address belongs to user
+      const existingAddress = await storage.getAddressById(addressId);
+      
+      if (!existingAddress) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      
+      if (existingAddress.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this address" });
+      }
+      
+      // Delete address
+      await storage.deleteAddress(addressId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Set address as default
+  app.put("/api/user/addresses/:id/default", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const addressId = parseInt(req.params.id);
+      
+      // Verify address belongs to user
+      const existingAddress = await storage.getAddressById(addressId);
+      
+      if (!existingAddress) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      
+      if (existingAddress.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this address" });
+      }
+      
+      // Set as default
+      await storage.setDefaultAddress(userId, addressId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
 }

@@ -58,12 +58,27 @@ export default function UserProfile() {
   const { t } = useTranslations();
   const { toast } = useToast();
 
-  // Récupérer l'adresse actuelle de l'utilisateur
-  const { data: address, isLoading: addressLoading } = useQuery({
-    queryKey: ['/api/user/address'],
+  // Récupérer les adresses de l'utilisateur
+  const { data: addresses, isLoading: addressesLoading } = useQuery({
+    queryKey: ['/api/user/addresses'],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', '/api/user/address');
+        const res = await apiRequest('GET', '/api/user/addresses');
+        if (!res.ok) return [];
+        return await res.json();
+      } catch (error) {
+        return [];
+      }
+    },
+    enabled: !!user,
+  });
+  
+  // Récupérer l'adresse par défaut de l'utilisateur
+  const { data: defaultAddress, isLoading: defaultAddressLoading } = useQuery({
+    queryKey: ['/api/user/addresses/default'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/user/addresses/default');
         if (!res.ok) return null;
         return await res.json();
       } catch (error) {
@@ -88,35 +103,38 @@ export default function UserProfile() {
   const addressForm = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      addressLine1: address?.addressLine1 || '',
-      addressLine2: address?.addressLine2 || '',
-      city: address?.city || '',
-      state: address?.state || '',
-      postalCode: address?.postalCode || '',
-      country: address?.country || '',
-      phone: address?.phone || '',
+      addressLine1: defaultAddress?.addressLine1 || '',
+      addressLine2: defaultAddress?.addressLine2 || '',
+      city: defaultAddress?.city || '',
+      state: defaultAddress?.state || '',
+      postalCode: defaultAddress?.postalCode || '',
+      country: defaultAddress?.country || '',
+      phone: defaultAddress?.phone || '',
     },
   });
 
   // Mettre à jour le formulaire d'adresse quand les données sont chargées
   React.useEffect(() => {
-    if (address) {
+    if (defaultAddress) {
       addressForm.reset({
-        addressLine1: address.addressLine1 || '',
-        addressLine2: address.addressLine2 || '',
-        city: address.city || '',
-        state: address.state || '',
-        postalCode: address.postalCode || '',
-        country: address.country || '',
-        phone: address.phone || '',
+        addressLine1: defaultAddress.addressLine1 || '',
+        addressLine2: defaultAddress.addressLine2 || '',
+        city: defaultAddress.city || '',
+        state: defaultAddress.state || '',
+        postalCode: defaultAddress.postalCode || '',
+        country: defaultAddress.country || '',
+        phone: defaultAddress.phone || '',
       });
     }
-  }, [address, addressForm]);
+  }, [defaultAddress, addressForm]);
 
   // Mutation pour mettre à jour le profil
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormValues) => {
-      const res = await apiRequest('PATCH', '/api/user', data);
+      const res = await apiRequest('PUT', '/api/user/profile', data);
+      if (!res.ok) {
+        throw new Error(t.errorUpdatingProfile || "Erreur lors de la mise à jour du profil");
+      }
       return await res.json();
     },
     onSuccess: (updatedUser) => {
@@ -135,14 +153,44 @@ export default function UserProfile() {
     },
   });
 
-  // Mutation pour mettre à jour l'adresse
-  const updateAddressMutation = useMutation({
-    mutationFn: async (data: AddressFormValues) => {
-      const res = await apiRequest('POST', '/api/user/address', data);
+  // Mutation pour créer une nouvelle adresse
+  const createAddressMutation = useMutation({
+    mutationFn: async (data: AddressFormValues & { isDefault?: boolean }) => {
+      const res = await apiRequest('POST', '/api/user/addresses', data);
+      if (!res.ok) {
+        throw new Error("Erreur lors de la création de l'adresse");
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/address'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/addresses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/addresses/default'] });
+      toast({
+        title: "Adresse créée",
+        description: "Votre adresse a été créée avec succès",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t.error || "Erreur",
+        description: error.message || "Erreur lors de la création de l'adresse",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation pour mettre à jour une adresse existante
+  const updateAddressMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: AddressFormValues }) => {
+      const res = await apiRequest('PUT', `/api/user/addresses/${id}`, data);
+      if (!res.ok) {
+        throw new Error(t.errorUpdatingAddress || "Erreur lors de la mise à jour de l'adresse");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/addresses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/addresses/default'] });
       toast({
         title: t.addressUpdated || "Adresse mise à jour",
         description: t.addressUpdatedSuccess || "Votre adresse a été mise à jour avec succès",
@@ -164,7 +212,13 @@ export default function UserProfile() {
 
   // Soumission du formulaire d'adresse
   const onAddressSubmit = (data: AddressFormValues) => {
-    updateAddressMutation.mutate(data);
+    if (defaultAddress) {
+      // Mettre à jour l'adresse existante
+      updateAddressMutation.mutate({ id: defaultAddress.id, data });
+    } else {
+      // Créer une nouvelle adresse
+      createAddressMutation.mutate({ ...data, isDefault: true });
+    }
   };
 
   if (authLoading) {
