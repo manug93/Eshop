@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ interface CartItem {
   thumbnail: string;
 }
 
-const Cart = () => {
+export default function Cart() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -25,7 +25,7 @@ const Cart = () => {
   const [promoCode, setPromoCode] = useState("");
   
   // Fetch cart items 
-  const { data: cartItems = [], isLoading, refetch } = useQuery({
+  const { data: cartItems = [], isLoading } = useQuery({
     queryKey: ['/api/cart/items'],
     queryFn: async () => {
       try {
@@ -40,21 +40,21 @@ const Cart = () => {
             title: "iPhone 9",
             price: 549,
             quantity: 1,
-            thumbnail: "https://i.dummyjson.com/data/products/1/thumbnail.jpg"
+            thumbnail: "https://placehold.co/300x300/4F46E5/FFFFFF.png?text=iPhone+9"
           },
           {
             id: 2,
             title: "iPhone X",
             price: 899,
             quantity: 2,
-            thumbnail: "https://i.dummyjson.com/data/products/2/thumbnail.jpg"
+            thumbnail: "https://placehold.co/300x300/8B5CF6/FFFFFF.png?text=iPhone+X"
           },
           {
             id: 3,
             title: "Samsung Universe 9",
             price: 1249,
             quantity: 1,
-            thumbnail: "https://i.dummyjson.com/data/products/3/thumbnail.jpg"
+            thumbnail: "https://placehold.co/300x300/EC4899/FFFFFF.png?text=Samsung"
           }
         ];
       }
@@ -160,7 +160,7 @@ const Cart = () => {
       const response = await apiRequest('POST', '/api/orders');
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: t.orderCreated,
         description: t.redirectingToCheckout,
@@ -221,7 +221,7 @@ const Cart = () => {
   };
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total: number, item: CartItem) => total + (item.price * item.quantity), 0);
   };
 
   const calculateTax = () => {
@@ -277,7 +277,7 @@ const Cart = () => {
               <div className="p-6">
                 <div className="flow-root">
                   <ul className="-my-6 divide-y divide-gray-200">
-                    {cartItems.map((item) => (
+                    {cartItems.map((item: CartItem) => (
                       <li key={item.id} className="cart-item py-6">
                         <div className="flex items-center">
                           <img
@@ -403,11 +403,9 @@ const Cart = () => {
               </div>
               <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
                 <div className="flex items-center">
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/2560px-Stripe_Logo%2C_revised_2016.svg.png" 
-                    alt="Stripe"
-                    className="h-6 mr-2"
-                  />
+                  <div className="text-lg font-medium text-gray-400 mr-2">
+                    Stripe
+                  </div>
                   <span className="text-xs text-gray-500">
                     {t.securePayment}
                   </span>
@@ -448,6 +446,4 @@ const Cart = () => {
       </div>
     </div>
   );
-};
-
-export default Cart;
+}
