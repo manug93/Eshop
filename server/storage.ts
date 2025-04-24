@@ -9,6 +9,7 @@ import {
   wishlists, 
   promotions, 
   translations,
+  addresses,
   type User, 
   type InsertUser,
   type Product,
@@ -28,7 +29,9 @@ import {
   type Promotion,
   type InsertPromotion,
   type Translation,
-  type InsertTranslation
+  type InsertTranslation,
+  type Address,
+  type InsertAddress
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, or, like } from "drizzle-orm";
@@ -92,6 +95,15 @@ export interface IStorage {
   getActivePromotions(): Promise<Promotion[]>;
   getPromotionByCode(code: string): Promise<Promotion | undefined>;
   
+  // Address methods
+  getUserAddresses(userId: number): Promise<Address[]>;
+  getUserDefaultAddress(userId: number): Promise<Address | undefined>;
+  getAddressById(id: number): Promise<Address | undefined>;
+  createAddress(address: InsertAddress): Promise<Address>;
+  updateAddress(id: number, addressData: Partial<InsertAddress>): Promise<Address | undefined>;
+  deleteAddress(id: number): Promise<boolean>;
+  setDefaultAddress(userId: number, addressId: number): Promise<boolean>;
+
   // Translation methods
   getTranslations(entityType: string, entityId: number, language: string): Promise<Translation[]>;
   createTranslation(translation: InsertTranslation): Promise<Translation>;
@@ -456,6 +468,141 @@ export class DatabaseStorage implements IStorage {
       .from(promotions)
       .where(eq(promotions.code, code));
     return promotion;
+  }
+
+  // Address methods
+  async getUserAddresses(userId: number): Promise<Address[]> {
+    return db
+      .select()
+      .from(addresses)
+      .where(eq(addresses.userId, userId))
+      .orderBy(desc(addresses.isDefault));
+  }
+
+  async getUserDefaultAddress(userId: number): Promise<Address | undefined> {
+    const [address] = await db
+      .select()
+      .from(addresses)
+      .where(
+        and(
+          eq(addresses.userId, userId),
+          eq(addresses.isDefault, true)
+        )
+      );
+    return address;
+  }
+
+  async getAddressById(id: number): Promise<Address | undefined> {
+    const [address] = await db
+      .select()
+      .from(addresses)
+      .where(eq(addresses.id, id));
+    return address;
+  }
+
+  async createAddress(addressData: InsertAddress): Promise<Address> {
+    // If this is the first address for the user or set as default, make sure any existing default is updated
+    if (addressData.isDefault) {
+      await db
+        .update(addresses)
+        .set({ isDefault: false })
+        .where(
+          and(
+            eq(addresses.userId, addressData.userId),
+            eq(addresses.isDefault, true)
+          )
+        );
+    }
+    
+    const [address] = await db
+      .insert(addresses)
+      .values(addressData)
+      .returning();
+    return address;
+  }
+
+  async updateAddress(id: number, addressData: Partial<InsertAddress>): Promise<Address | undefined> {
+    // If setting as default, make sure any existing default is updated
+    if (addressData.isDefault) {
+      const [existingAddress] = await db
+        .select()
+        .from(addresses)
+        .where(eq(addresses.id, id));
+        
+      if (existingAddress) {
+        await db
+          .update(addresses)
+          .set({ isDefault: false })
+          .where(
+            and(
+              eq(addresses.userId, existingAddress.userId),
+              eq(addresses.isDefault, true),
+              sql`${addresses.id} != ${id}`
+            )
+          );
+      }
+    }
+    
+    const [updatedAddress] = await db
+      .update(addresses)
+      .set(addressData)
+      .where(eq(addresses.id, id))
+      .returning();
+    return updatedAddress;
+  }
+
+  async deleteAddress(id: number): Promise<boolean> {
+    // Check if this is a default address
+    const [address] = await db
+      .select()
+      .from(addresses)
+      .where(eq(addresses.id, id));
+      
+    if (address && address.isDefault) {
+      // If deleting a default address, try to set another one as default
+      const [anotherAddress] = await db
+        .select()
+        .from(addresses)
+        .where(
+          and(
+            eq(addresses.userId, address.userId),
+            sql`${addresses.id} != ${id}`
+          )
+        )
+        .limit(1);
+        
+      if (anotherAddress) {
+        await db
+          .update(addresses)
+          .set({ isDefault: true })
+          .where(eq(addresses.id, anotherAddress.id));
+      }
+    }
+    
+    await db
+      .delete(addresses)
+      .where(eq(addresses.id, id));
+    return true;
+  }
+
+  async setDefaultAddress(userId: number, addressId: number): Promise<boolean> {
+    // First, set all addresses for this user to non-default
+    await db
+      .update(addresses)
+      .set({ isDefault: false })
+      .where(eq(addresses.userId, userId));
+      
+    // Then set the specified address as default
+    await db
+      .update(addresses)
+      .set({ isDefault: true })
+      .where(
+        and(
+          eq(addresses.id, addressId),
+          eq(addresses.userId, userId)
+        )
+      );
+    return true;
   }
 
   // Translation methods
