@@ -100,23 +100,23 @@ export default function AuthPage() {
           className="w-full max-w-md"
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsTrigger value="login">{t.loginTitle}</TabsTrigger>
+            <TabsTrigger value="register">{t.registerTitle}</TabsTrigger>
           </TabsList>
 
           {/* Login Form */}
           <TabsContent value="login">
             <Card>
               <CardHeader>
-                <CardTitle>Login to your account</CardTitle>
+                <CardTitle>{t.loginTitle}</CardTitle>
                 <CardDescription>
-                  Enter your username and password to access your account
+                  {t.loginText}
                 </CardDescription>
               </CardHeader>
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username">{t.username}</Label>
                     <Input 
                       id="username"
                       type="text"
@@ -129,7 +129,7 @@ export default function AuthPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t.password}</Label>
                     <Input 
                       id="password"
                       type="password" 
@@ -151,10 +151,10 @@ export default function AuthPage() {
                     {loginMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        Logging in...
+                        {t.loggingOut}
                       </>
                     ) : (
-                      "Login"
+                      t.loginButton
                     )}
                   </Button>
                 </CardFooter>
@@ -166,23 +166,23 @@ export default function AuthPage() {
           <TabsContent value="register">
             <Card>
               <CardHeader>
-                <CardTitle>Create an account</CardTitle>
+                <CardTitle>{t.registerTitle}</CardTitle>
                 <CardDescription>
-                  Enter your details to create a new account
+                  {t.registerText}
                 </CardDescription>
               </CardHeader>
               <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First name</Label>
+                      <Label htmlFor="firstName">{t.firstName}</Label>
                       <Input 
                         id="firstName"
                         {...registerForm.register("firstName")} 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last name</Label>
+                      <Label htmlFor="lastName">{t.lastName}</Label>
                       <Input 
                         id="lastName"
                         {...registerForm.register("lastName")} 
@@ -190,7 +190,7 @@ export default function AuthPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="reg-username">Username</Label>
+                    <Label htmlFor="reg-username">{t.username}</Label>
                     <Input 
                       id="reg-username"
                       {...registerForm.register("username")} 
@@ -202,7 +202,7 @@ export default function AuthPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t.email}</Label>
                     <Input 
                       id="email"
                       type="email" 
@@ -215,7 +215,7 @@ export default function AuthPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password</Label>
+                    <Label htmlFor="reg-password">{t.password}</Label>
                     <Input 
                       id="reg-password"
                       type="password" 
@@ -228,7 +228,7 @@ export default function AuthPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="confirmPassword">{t.password}</Label>
                     <Input 
                       id="confirmPassword"
                       type="password" 
@@ -261,10 +261,10 @@ export default function AuthPage() {
                     {registerMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        Creating account...
+                        {t.loggingOut}
                       </>
                     ) : (
-                      "Create account"
+                      t.registerButton
                     )}
                   </Button>
                 </CardFooter>
@@ -279,37 +279,14 @@ export default function AuthPage() {
         <div className="flex flex-col justify-center px-12 py-24 space-y-6">
           <div>
             <h1 className="text-4xl font-bold mb-6">
-              Welcome to our E-Commerce Platform
+              {t.authHeroTitle}
             </h1>
             <p className="text-xl opacity-90 mb-4">
-              Shop with confidence on our secure platform
+              {t.authHeroSubtitle}
             </p>
-            <ul className="space-y-2 opacity-80">
-              <li className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Wide selection of products</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Fast and reliable shipping</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Secure payment processing</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>24/7 customer support</span>
-              </li>
-            </ul>
+            <p className="opacity-80 mb-4">
+              {t.authDescription}
+            </p>
           </div>
         </div>
       </div>
