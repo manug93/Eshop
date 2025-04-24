@@ -107,8 +107,8 @@ export default function UserOrdersPage() {
       <div className="container mx-auto py-8">
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">{t.common.error}</CardTitle>
-            <CardDescription>{t.orders.errorFetching}</CardDescription>
+            <CardTitle className="text-destructive">{t.error}</CardTitle>
+            <CardDescription>{t.orders?.errorFetching}</CardDescription>
           </CardHeader>
           <CardContent>
             <p>{(error as Error).message}</p>
@@ -123,13 +123,13 @@ export default function UserOrdersPage() {
       <div className="container mx-auto py-8">
         <Card>
           <CardHeader>
-            <CardTitle>{t.orders.myOrders}</CardTitle>
-            <CardDescription>{t.orders.viewHistory}</CardDescription>
+            <CardTitle>{t.myOrders}</CardTitle>
+            <CardDescription>{t.orders?.viewHistory}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-center py-8">{t.orders.noOrders}</p>
+            <p className="text-muted-foreground text-center py-8">{t.orders?.noOrders}</p>
             <Link to="/products" className="text-primary hover:underline">
-              {t.products.browseProducts}
+              {t.browseProducts || t.products}
             </Link>
           </CardContent>
         </Card>
@@ -139,8 +139,8 @@ export default function UserOrdersPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">{t.orders.myOrders}</h1>
-      <p className="text-muted-foreground mb-8">{t.orders.viewHistory}</p>
+      <h1 className="text-3xl font-bold mb-6">{t.myOrders}</h1>
+      <p className="text-muted-foreground mb-8">{t.orders?.viewHistory || t.viewHistory}</p>
 
       <div className="space-y-8">
         {orders.map((order) => (
@@ -149,7 +149,7 @@ export default function UserOrdersPage() {
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                   <CardTitle className="text-xl">
-                    {t.orders.order} #{order.id}
+                    {t.order || "Order"} #{order.id}
                   </CardTitle>
                   <CardDescription>
                     {formatDate(order.createdAt)}
@@ -167,10 +167,10 @@ export default function UserOrdersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t.cart.product}</TableHead>
-                    <TableHead className="text-center">{t.cart.quantity}</TableHead>
-                    <TableHead className="text-right">{t.cart.price}</TableHead>
-                    <TableHead className="text-right">{t.cart.subtotal}</TableHead>
+                    <TableHead>{t.product || "Product"}</TableHead>
+                    <TableHead className="text-center">{t.quantity || "Quantity"}</TableHead>
+                    <TableHead className="text-right">{t.price || "Price"}</TableHead>
+                    <TableHead className="text-right">{t.subtotal || "Subtotal"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,30 +187,30 @@ export default function UserOrdersPage() {
               <div className="p-6 bg-muted/30">
                 <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:justify-between">
                   <div>
-                    <p className="font-medium">{t.orders.paymentInfo}</p>
+                    <p className="font-medium">{t.paymentInfo || "Payment Information"}</p>
                     <p className="text-sm text-muted-foreground">
                       {order.paymentIntentId ? 
-                        `${t.orders.paymentId}: ${order.paymentIntentId.substring(0, 10)}...` : 
-                        t.orders.noPaymentInfo
+                        `${t.paymentId || "Payment ID"}: ${order.paymentIntentId.substring(0, 10)}...` : 
+                        t.noPaymentInfo || "No payment information"
                       }
                     </p>
                   </div>
                   <div className="space-y-1">
                     <div className="flex justify-between gap-8">
-                      <span className="text-muted-foreground">{t.checkout.subtotal}:</span>
+                      <span className="text-muted-foreground">{t.subtotal || "Subtotal"}:</span>
                       <span>${(order.total - order.tax - order.shipping).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between gap-8">
-                      <span className="text-muted-foreground">{t.checkout.shipping}:</span>
+                      <span className="text-muted-foreground">{t.shipping || "Shipping"}:</span>
                       <span>${order.shipping.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between gap-8">
-                      <span className="text-muted-foreground">{t.checkout.tax}:</span>
+                      <span className="text-muted-foreground">{t.tax || "Tax"}:</span>
                       <span>${order.tax.toFixed(2)}</span>
                     </div>
                     <Separator className="my-2" />
                     <div className="flex justify-between gap-8 font-bold">
-                      <span>{t.checkout.total}:</span>
+                      <span>{t.total || "Total"}:</span>
                       <span>${order.total.toFixed(2)}</span>
                     </div>
                   </div>
