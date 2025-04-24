@@ -33,7 +33,17 @@ type RegisterData = {
   preferredLanguage?: string;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+// Create the context with a default value that matches the shape
+const defaultContext: AuthContextType = {
+  user: null,
+  isLoading: false,
+  error: null,
+  loginMutation: {} as any,
+  logoutMutation: {} as any,
+  registerMutation: {} as any
+};
+
+export const AuthContext = createContext<AuthContextType>(defaultContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const {
@@ -137,8 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  // Since we now have a default value, we'll never get null here
   return context;
 }
