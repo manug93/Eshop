@@ -13,6 +13,7 @@ import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import CheckoutSuccess from "@/pages/checkout-success";
 import AuthPage from "@/pages/auth-page";
+import AdminDashboard from "@/pages/admin/dashboard";
 
 // Layout component with navigation
 function Layout({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                   <span className="text-sm text-gray-700">
                     {user.firstName ? `Hello, ${user.firstName}` : `Hello, ${user.username}`}
                   </span>
+                  {user.isAdmin && (
+                    <a href="/admin/dashboard" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
+                      Admin
+                    </a>
+                  )}
                   <button 
                     onClick={() => logoutMutation.mutate()}
                     className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium"
@@ -158,6 +164,11 @@ function Router() {
           <CheckoutSuccess />
         </Layout>
       </ProtectedRoute>
+      <AdminRoute path="/admin/dashboard">
+        <Layout>
+          <AdminDashboard />
+        </Layout>
+      </AdminRoute>
       <Route path="/auth">
         {() => <AuthPage />}
       </Route>
