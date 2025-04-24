@@ -85,7 +85,7 @@ const ProductDetail = () => {
     
     toast({
       title: t.itemAdded || "Added to Cart",
-      description: `${product.title} ${t.hasBeenAddedToCart || "has been added to your cart"}`,
+      description: `${product.title} has been added to your cart`,
     });
   };
 

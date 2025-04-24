@@ -246,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as any).id;
-      const { id, title, price, thumbnail, quantity = 1 } = req.body;
+      const { id, title, price, thumbnail, quantity = 1, description = "", brand = "", category = "other" } = req.body;
       
       if (!id) {
         return res.status(400).json({ message: "Product ID is required" });
@@ -257,6 +257,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!cart) {
         cart = await storage.createCart({ userId });
+      }
+      
+      // Check if product exists in database
+      let [existingProduct] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id));
+      
+      // If product doesn't exist, create it (for external products)
+      if (!existingProduct) {
+        try {
+          // First, check if we have a default category
+          let [defaultCategory] = await db
+            .select()
+            .from(categories)
+            .where(eq(categories.name, "other"));
+          
+          // Create default category if it doesn't exist
+          if (!defaultCategory) {
+            [defaultCategory] = await db
+              .insert(categories)
+              .values({
+                name: "other",
+                slug: "other"
+              })
+              .returning();
+          }
+
+          // Then create the product
+          [existingProduct] = await db
+            .insert(products)
+            .values({
+              id: id, // Use the external ID
+              title: title,
+              description: description || "Product imported from external source",
+              price: price,
+              brand: brand || "Unknown",
+              categoryId: defaultCategory.id,
+              thumbnail: thumbnail || "",
+              images: []
+            })
+            .returning();
+            
+          console.log(`Created product for external ID: ${id}`);
+        } catch (err) {
+          console.error("Error creating product:", err);
+          // If we can't create the product, we'll just return a different error
+          return res.status(400).json({ message: "Cannot add this product to cart" });
+        }
       }
       
       // Add item to cart
@@ -276,6 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         thumbnail
       });
     } catch (error) {
+      console.error("Error adding item to cart:", error);
       next(error);
     }
   });
