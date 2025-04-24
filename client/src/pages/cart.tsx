@@ -26,11 +26,21 @@ export default function Cart() {
     clearCart 
   } = useCart();
   
+  // États pour suivre les opérations en cours
+  const [clearingCart, setClearingCart] = useState(false);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+  
   // Mutation pour appliquer un code promo
   const applyPromoCodeMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await apiRequest('POST', '/api/apply-promo', { code });
-      return response.json();
+      setApplyingPromo(true);
+      try {
+        const response = await apiRequest('POST', '/api/apply-promo', { code });
+        return response.json();
+      } finally {
+        setApplyingPromo(false);
+      }
     },
     onSuccess: () => {
       toast({
@@ -39,23 +49,27 @@ export default function Cart() {
       });
       setPromoCode("");
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: t.error,
         description: t.invalidPromoCode,
         variant: "destructive",
       });
-      console.error('Error applying promo code:', error);
     }
   });
 
   // Mutation pour le processus de commande
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/create-payment-intent', { 
-        amount: calculateTotal() 
-      });
-      return response.json();
+      setCheckingOut(true);
+      try {
+        const response = await apiRequest('POST', '/api/create-payment-intent', { 
+          amount: calculateTotal() 
+        });
+        return response.json();
+      } finally {
+        setCheckingOut(false);
+      }
     },
     onSuccess: () => {
       toast({
@@ -67,15 +81,20 @@ export default function Cart() {
         setLocation('/checkout');
       }, 1000);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: t.error,
         description: t.errorProcessingOrder,
         variant: "destructive",
       });
-      console.error('Error processing order:', error);
     }
   });
+  
+  const handleClearCart = () => {
+    setClearingCart(true);
+    clearCart();
+    setTimeout(() => setClearingCart(false), 500);
+  };
   
   const applyPromoCode = () => {
     if (promoCode.trim()) {
@@ -126,7 +145,7 @@ export default function Cart() {
     );
   }
 
-  if (cartItems.length === 0) {
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
@@ -178,6 +197,7 @@ export default function Cart() {
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                   className="px-3 py-1 text-gray-600 hover:text-gray-800"
+                                  disabled={item.quantity <= 1}
                                 >
                                   -
                                 </button>
@@ -192,16 +212,11 @@ export default function Cart() {
                             </div>
                           </div>
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeFromCart(item.id)}
                             className="absolute top-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors duration-200 shadow-sm"
-                            disabled={removeItemMutation.isPending}
                             aria-label={t.remove}
                           >
-                            {removeItemMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </li>
@@ -212,13 +227,13 @@ export default function Cart() {
               <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
                 <div className="flex justify-between">
                   <Button 
-                    onClick={clearCart}
+                    onClick={handleClearCart}
                     variant="outline"
                     className="flex items-center text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
                     size="sm"
-                    disabled={clearCartMutation.isPending}
+                    disabled={clearingCart}
                   >
-                    {clearCartMutation.isPending ? (
+                    {clearingCart ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <Trash2 className="mr-2 h-4 w-4" />
@@ -248,7 +263,7 @@ export default function Cart() {
                   <dl className="-my-4 divide-y divide-gray-200">
                     <div className="py-4 flex items-center justify-between">
                       <dt className="text-sm text-gray-600">{t.subtotal}</dt>
-                      <dd className="text-sm font-medium text-gray-900">${calculateSubtotal().toFixed(2)}</dd>
+                      <dd className="text-sm font-medium text-gray-900">${subtotal.toFixed(2)}</dd>
                     </div>
                     <div className="py-4 flex items-center justify-between">
                       <dt className="text-sm text-gray-600">{t.shipping}</dt>
@@ -275,9 +290,9 @@ export default function Cart() {
                 <Button
                   onClick={proceedToCheckout}
                   className="w-full py-3"
-                  disabled={checkoutMutation.isPending}
+                  disabled={checkingOut}
                 >
-                  {checkoutMutation.isPending ? (
+                  {checkingOut ? (
                     <span className="flex items-center justify-center">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {t.processing}
@@ -310,15 +325,15 @@ export default function Cart() {
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    disabled={applyPromoCodeMutation.isPending}
+                    disabled={applyingPromo}
                   />
                   <Button
                     variant="secondary"
                     className="rounded-l-none"
                     onClick={applyPromoCode}
-                    disabled={applyPromoCodeMutation.isPending}
+                    disabled={applyingPromo}
                   >
-                    {applyPromoCodeMutation.isPending ? (
+                    {applyingPromo ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       t.apply
