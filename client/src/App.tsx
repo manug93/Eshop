@@ -172,6 +172,11 @@ function Router() {
           <UserOrders />
         </Layout>
       </ProtectedRoute>
+      <ProtectedRoute path="/user/profile">
+        <Layout>
+          <UserProfile />
+        </Layout>
+      </ProtectedRoute>
       <Route path="/auth">
         {() => <AuthPage />}
       </Route>

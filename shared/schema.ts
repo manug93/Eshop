@@ -127,6 +127,22 @@ export const promotions = pgTable("promotions", {
   active: boolean("active").default(true),
 });
 
+// User Addresses table
+export const addresses = pgTable("addresses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  addressLine1: text("address_line1").notNull(),
+  addressLine2: text("address_line2"),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  postalCode: text("postal_code").notNull(),
+  country: text("country").notNull(),
+  phone: text("phone"),
+  isDefault: boolean("is_default").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Translations table (for multilanguage support)
 export const translations = pgTable("translations", {
   id: serial("id").primaryKey(),
@@ -142,6 +158,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   carts: many(carts),
   wishlists: many(wishlists),
+  addresses: many(addresses),
+}));
+
+export const addressesRelations = relations(addresses, ({ one }) => ({
+  user: one(users, {
+    fields: [addresses.userId],
+    references: [users.id],
+  }),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -257,6 +281,12 @@ export const insertWishlistSchema = createInsertSchema(wishlists).omit({
 
 export const insertPromotionSchema = createInsertSchema(promotions).omit({
   id: true,
+});
+
+export const insertAddressSchema = createInsertSchema(addresses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertTranslationSchema = createInsertSchema(translations).omit({

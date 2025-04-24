@@ -14,6 +14,28 @@ export const translations = {
     hello: "Hello",
     loggingOut: "Logging out...",
     
+    // User Profile
+    personalInfo: "Personal Information",
+    personalInfoDesc: "Update your personal information",
+    preferredLanguage: "Preferred Language",
+    profileUpdated: "Profile Updated",
+    profileUpdatedSuccess: "Your profile has been updated successfully",
+    addressUpdated: "Address Updated",
+    addressUpdatedSuccess: "Your shipping address has been updated successfully",
+    errorUpdatingProfile: "Error updating profile",
+    errorUpdatingAddress: "Error updating address",
+    updating: "Updating...",
+    saveChanges: "Save Changes",
+    shippingAddressDesc: "Update your shipping address for your orders",
+    addressLine1: "Address",
+    addressLine2: "Address Line 2",
+    city: "City",
+    state: "State/Province/Region",
+    postalCode: "Postal Code",
+    country: "Country",
+    phone: "Phone",
+    optional: "Optional",
+    
     // User Account & Orders
     account: {
       loginRequired: "Login Required",
@@ -227,6 +249,28 @@ export const translations = {
     profile: "Profil",
     hello: "Bonjour",
     loggingOut: "Déconnexion en cours...",
+    
+    // User Profile
+    personalInfo: "Informations personnelles",
+    personalInfoDesc: "Mettre à jour vos informations personnelles",
+    preferredLanguage: "Langue préférée",
+    profileUpdated: "Profil mis à jour",
+    profileUpdatedSuccess: "Votre profil a été mis à jour avec succès",
+    addressUpdated: "Adresse mise à jour",
+    addressUpdatedSuccess: "Votre adresse de livraison a été mise à jour avec succès",
+    errorUpdatingProfile: "Erreur lors de la mise à jour du profil",
+    errorUpdatingAddress: "Erreur lors de la mise à jour de l'adresse",
+    updating: "Mise à jour...",
+    saveChanges: "Enregistrer les modifications",
+    shippingAddressDesc: "Mettre à jour votre adresse de livraison pour vos commandes",
+    addressLine1: "Adresse",
+    addressLine2: "Complément d'adresse",
+    city: "Ville",
+    state: "Province/État/Région",
+    postalCode: "Code postal",
+    country: "Pays",
+    phone: "Téléphone",
+    optional: "Optionnel",
     
     // User Account & Orders
     account: {
