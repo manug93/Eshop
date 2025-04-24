@@ -113,12 +113,10 @@ const Home = () => {
               <div className="relative transform transition-all">
                 {/* Floating Card 1 */}
                 <div className="absolute -top-10 -left-16 w-40 h-40 bg-white/10 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-white/20 transform rotate-12 animate-float-slow hidden md:block">
-                  <div className="rounded-xl bg-indigo-100 h-full w-full overflow-hidden">
-                    <img 
-                      src="https://via.placeholder.com/150/3B82F6/FFFFFF?text=Phone" 
-                      alt="Phone" 
-                      className="object-cover h-full w-full"
-                    />
+                  <div className="rounded-xl h-full w-full overflow-hidden">
+                    <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold text-lg">
+                      Phone
+                    </div>
                   </div>
                 </div>
                 
@@ -126,11 +124,15 @@ const Home = () => {
                 <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-3xl p-5 shadow-2xl border border-white/20 overflow-hidden">
                   <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-pink-500 rounded-full opacity-30 blur-xl"></div>
                   <div className="relative rounded-2xl bg-white overflow-hidden h-64 w-64 md:h-80 md:w-80">
-                    <img 
-                      src="https://via.placeholder.com/300/9333EA/FFFFFF?text=Featured+Product" 
-                      alt="Featured Product"
-                      className="h-full w-full object-cover"
-                    />
+                    <div className="h-full w-full bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 flex flex-col items-center justify-center p-6">
+                      <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                        <div className="text-5xl">📱</div>
+                      </div>
+                      <div className="text-white text-center">
+                        <div className="font-bold text-lg">Samsung Galaxy</div>
+                        <div className="text-white/80 text-sm">Latest Model</div>
+                      </div>
+                    </div>
                     <div className="absolute bottom-3 left-3 right-3 bg-black/60 backdrop-blur-sm rounded-xl p-2 text-white">
                       <div className="text-xs font-bold opacity-80">FEATURED PRODUCT</div>
                       <div className="text-sm truncate">Samsung Galaxy</div>
@@ -141,11 +143,9 @@ const Home = () => {
                 {/* Floating Card 2 */}
                 <div className="absolute -bottom-8 -right-12 w-36 h-36 bg-white/10 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-white/20 transform -rotate-6 animate-float hidden md:block">
                   <div className="rounded-xl bg-amber-50 h-full w-full overflow-hidden">
-                    <img 
-                      src="https://via.placeholder.com/150/F59E0B/FFFFFF?text=Laptop" 
-                      alt="Laptop" 
-                      className="object-cover h-full w-full"
-                    />
+                    <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-amber-400 to-amber-600 text-white font-bold text-lg">
+                      Laptop
+                    </div>
                   </div>
                 </div>
                 
@@ -283,7 +283,11 @@ const Home = () => {
                   {/* Product image with hover effect */}
                   <div className="relative overflow-hidden aspect-[4/3]">
                     <img
-                      src={`https://via.placeholder.com/400x300/${Math.floor(Math.random()*16777215).toString(16)}/${textColor}?text=Product+${product.id}`}
+                      src={`https://placehold.co/400x300/${productColorIndex === 0 ? '4F46E5' : 
+                              productColorIndex === 1 ? '8B5CF6' : 
+                              productColorIndex === 2 ? 'EC4899' : 
+                              productColorIndex === 3 ? 'F59E0B' : 
+                              '10B981'}/${textColor}.png?text=Product+${product.id}`}
                       alt={product.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       loading="lazy"
