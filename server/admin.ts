@@ -29,7 +29,7 @@ export function setupAdmin(app: Express) {
   // Get all users (admin only)
   app.get("/api/admin/users", isAdmin, async (req, res, next) => {
     try {
-      const users = await db.select({
+      const allUsers = await db.select({
         id: users.id,
         username: users.username,
         email: users.email,
@@ -43,7 +43,7 @@ export function setupAdmin(app: Express) {
         stripeSubscriptionId: users.stripeSubscriptionId
       }).from(users);
       
-      res.json(users);
+      res.json(allUsers);
     } catch (error) {
       next(error);
     }
