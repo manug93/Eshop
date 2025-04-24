@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedDatabase } from "./seed";
 import 'dotenv/config';
 
 const app = express();
@@ -38,6 +39,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Seed the database with default admin user
+  await seedDatabase();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
