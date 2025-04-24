@@ -10,6 +10,7 @@ export const translations = {
     admin: "Admin",
     myOrders: "My Orders",
     myAccount: "My Account",
+    profile: "Profile",
     hello: "Hello",
     loggingOut: "Logging out...",
     
@@ -223,6 +224,7 @@ export const translations = {
     admin: "Admin",
     myOrders: "Mes Commandes",
     myAccount: "Mon Compte",
+    profile: "Profil",
     hello: "Bonjour",
     loggingOut: "Déconnexion en cours...",
     

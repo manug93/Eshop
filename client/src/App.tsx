@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { useTranslations } from "@/hooks/use-translations";
 import { CartProvider, useCart } from "@/hooks/use-cart";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { UserDropdown } from "@/components/ui/user-dropdown";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -18,6 +19,7 @@ import Checkout from "@/pages/checkout";
 import CheckoutSuccess from "@/pages/checkout-success";
 import AuthPage from "@/pages/auth-page";
 import UserOrders from "@/pages/user-orders";
+import UserProfile from "@/pages/user-profile";
 import AdminDashboard from "@/pages/admin/dashboard";
 
 // Layout component with navigation
@@ -46,26 +48,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                 )}
               </a>
               {user ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">
-                    {user.firstName ? `${t.hello}, ${user.firstName}` : `${t.hello}, ${user.username}`}
-                  </span>
-                  <a href="/user/orders" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
-                    {t.myOrders}
-                  </a>
-                  {user.isAdmin && (
-                    <a href="/admin/dashboard" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
-                      {t.admin}
-                    </a>
-                  )}
-                  <button 
-                    onClick={() => logoutMutation.mutate()}
-                    className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium"
-                    disabled={logoutMutation.isPending}
-                  >
-                    {logoutMutation.isPending ? t.loggingOut : t.logout}
-                  </button>
-                </div>
+                <UserDropdown />
               ) : (
                 <a href="/auth" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
                   {t.login}
