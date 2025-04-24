@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/hooks/use-language";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -24,8 +26,9 @@ function Layout({ children }: { children: React.ReactNode }) {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
               <a href="/" className="text-2xl font-bold text-primary">E-Shop</a>
+              <LanguageSwitcher />
             </div>
             <nav className="flex space-x-8">
               <a href="/" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">Home</a>
@@ -188,10 +191,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
