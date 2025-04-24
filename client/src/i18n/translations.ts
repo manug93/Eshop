@@ -10,6 +10,23 @@ export const translations = {
     admin: "Admin",
     hello: "Hello",
     loggingOut: "Logging out...",
+    
+    // Hero Section
+    heroTitle: "Shop the Latest Products",
+    heroSubtitle: "Discover amazing deals on electronics, fashion, home goods and more.",
+    shopNow: "Shop Now",
+    browseCategories: "Browse Categories",
+    featuredProducts: "Featured Products",
+    featuredProductsSubtitle: "Explore our handpicked selection of the best products",
+    viewAllProducts: "Shop All Products",
+    shopByCategory: "Shop by Category",
+    shopByCategorySubtitle: "Browse our wide selection of products across popular categories",
+    viewAllCategories: "View All Categories",
+    newsletterTitle: "Join Our Newsletter",
+    newsletterText: "Subscribe to our newsletter and be the first to know about new products, special offers, and exclusive deals.",
+    subscribeButton: "Subscribe",
+    emailPlaceholder: "Enter your email",
+    privacyText: "We respect your privacy. Unsubscribe at any time.",
 
     // Auth Page
     loginTitle: "Login",
@@ -180,6 +197,23 @@ export const translations = {
     admin: "Admin",
     hello: "Bonjour",
     loggingOut: "Déconnexion en cours...",
+    
+    // Hero Section
+    heroTitle: "Achetez les derniers produits",
+    heroSubtitle: "Découvrez des offres incroyables sur l'électronique, la mode, les articles ménagers et plus encore.",
+    shopNow: "Acheter maintenant",
+    browseCategories: "Parcourir les catégories",
+    featuredProducts: "Produits en vedette",
+    featuredProductsSubtitle: "Explorez notre sélection triée sur le volet des meilleurs produits",
+    viewAllProducts: "Voir tous les produits",
+    shopByCategory: "Acheter par catégorie",
+    shopByCategorySubtitle: "Parcourez notre large sélection de produits dans différentes catégories populaires",
+    viewAllCategories: "Voir toutes les catégories",
+    newsletterTitle: "Rejoignez notre newsletter",
+    newsletterText: "Abonnez-vous à notre newsletter et soyez le premier à connaître les nouveaux produits, les offres spéciales et les offres exclusives.",
+    subscribeButton: "S'abonner",
+    emailPlaceholder: "Entrez votre email",
+    privacyText: "Nous respectons votre vie privée. Désabonnez-vous à tout moment.",
 
     // Auth Page
     loginTitle: "Connexion",
