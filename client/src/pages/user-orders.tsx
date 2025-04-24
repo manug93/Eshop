@@ -81,12 +81,12 @@ export default function UserOrdersPage() {
       <div className="container mx-auto py-8">
         <Card>
           <CardHeader>
-            <CardTitle>{t.account.loginRequired}</CardTitle>
-            <CardDescription>{t.account.loginToViewOrders}</CardDescription>
+            <CardTitle>{t.account?.loginRequired}</CardTitle>
+            <CardDescription>{t.account?.loginToViewOrders}</CardDescription>
           </CardHeader>
           <CardContent>
             <Link to="/auth" className="text-primary hover:underline">
-              {t.auth.loginNow}
+              {t.login}
             </Link>
           </CardContent>
         </Card>

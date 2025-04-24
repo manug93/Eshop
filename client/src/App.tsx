@@ -17,6 +17,7 @@ import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import CheckoutSuccess from "@/pages/checkout-success";
 import AuthPage from "@/pages/auth-page";
+import UserOrders from "@/pages/user-orders";
 import AdminDashboard from "@/pages/admin/dashboard";
 
 // Layout component with navigation
@@ -49,6 +50,9 @@ function Layout({ children }: { children: React.ReactNode }) {
                   <span className="text-sm text-gray-700">
                     {user.firstName ? `${t.hello}, ${user.firstName}` : `${t.hello}, ${user.username}`}
                   </span>
+                  <a href="/user/orders" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
+                    {t.myOrders}
+                  </a>
                   {user.isAdmin && (
                     <a href="/admin/dashboard" className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">
                       {t.admin}
@@ -180,6 +184,11 @@ function Router() {
           <AdminDashboard />
         </Layout>
       </AdminRoute>
+      <ProtectedRoute path="/user/orders">
+        <Layout>
+          <UserOrders />
+        </Layout>
+      </ProtectedRoute>
       <Route path="/auth">
         {() => <AuthPage />}
       </Route>

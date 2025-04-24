@@ -13,6 +13,27 @@ export const translations = {
     hello: "Hello",
     loggingOut: "Logging out...",
     
+    // User Account & Orders
+    account: {
+      loginRequired: "Login Required",
+      loginToViewOrders: "Please log in to view your orders"
+    },
+    
+    orders: {
+      myOrders: "My Orders",
+      viewHistory: "View your order history",
+      noOrders: "You haven't placed any orders yet",
+      order: "Order",
+      errorFetching: "There was an error fetching your orders",
+      paymentInfo: "Payment Information",
+      paymentId: "Payment ID",
+      noPaymentInfo: "No payment information available",
+      orderItems: "Order Items",
+      orderDate: "Order Date",
+      orderStatus: "Status",
+      orderTotal: "Total"
+    },
+    
     // Hero Section
     heroTitle: "Shop the Latest Products",
     heroSubtitle: "Discover amazing deals on electronics, fashion, home goods and more.",
@@ -149,7 +170,7 @@ export const translations = {
     // Admin Dashboard
     dashboard: "Dashboard",
     overview: "Overview",
-    orders: "Orders",
+    adminOrders: "Orders",
     users: "Users",
     analytics: "Analytics",
     adminProducts: "Products",
@@ -204,6 +225,27 @@ export const translations = {
     myAccount: "Mon Compte",
     hello: "Bonjour",
     loggingOut: "Déconnexion en cours...",
+    
+    // User Account & Orders
+    account: {
+      loginRequired: "Connexion Requise",
+      loginToViewOrders: "Veuillez vous connecter pour voir vos commandes"
+    },
+    
+    orders: {
+      myOrders: "Mes Commandes",
+      viewHistory: "Consultez l'historique de vos commandes",
+      noOrders: "Vous n'avez pas encore passé de commande",
+      order: "Commande",
+      errorFetching: "Une erreur s'est produite lors de la récupération de vos commandes",
+      paymentInfo: "Informations de paiement",
+      paymentId: "ID de paiement",
+      noPaymentInfo: "Aucune information de paiement disponible",
+      orderItems: "Articles commandés",
+      orderDate: "Date de commande",
+      orderStatus: "Statut",
+      orderTotal: "Total"
+    },
     
     // Hero Section
     heroTitle: "Achetez les derniers produits",
@@ -341,7 +383,7 @@ export const translations = {
     // Admin Dashboard
     dashboard: "Tableau de bord",
     overview: "Aperçu",
-    orders: "Commandes",
+    adminOrders: "Commandes",
     users: "Utilisateurs",
     analytics: "Analyses",
     adminProducts: "Produits",
