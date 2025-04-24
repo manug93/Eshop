@@ -73,53 +73,53 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-medium mb-4">Shop</h3>
+              <h3 className="text-lg font-medium mb-4">{t.shop}</h3>
               <ul className="space-y-2">
-                <li><a href="/products" className="text-gray-300 hover:text-white">New Arrivals</a></li>
-                <li><a href="/products?bestsellers=true" className="text-gray-300 hover:text-white">Best Sellers</a></li>
-                <li><a href="/products?deals=true" className="text-gray-300 hover:text-white">Deals & Promotions</a></li>
+                <li><a href="/products" className="text-gray-300 hover:text-white">{t.newArrivals}</a></li>
+                <li><a href="/products?bestsellers=true" className="text-gray-300 hover:text-white">{t.bestSellers}</a></li>
+                <li><a href="/products?deals=true" className="text-gray-300 hover:text-white">{t.dealsAndPromotions}</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-4">Customer Service</h3>
+              <h3 className="text-lg font-medium mb-4">{t.customerService}</h3>
               <ul className="space-y-2">
-                <li><a href="/contact" className="text-gray-300 hover:text-white">Contact Us</a></li>
-                <li><a href="/shipping" className="text-gray-300 hover:text-white">Shipping & Returns</a></li>
-                <li><a href="/faq" className="text-gray-300 hover:text-white">FAQs</a></li>
+                <li><a href="/contact" className="text-gray-300 hover:text-white">{t.contactUs}</a></li>
+                <li><a href="/shipping" className="text-gray-300 hover:text-white">{t.shippingAndReturns}</a></li>
+                <li><a href="/faq" className="text-gray-300 hover:text-white">{t.faqs}</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-4">About</h3>
+              <h3 className="text-lg font-medium mb-4">{t.about}</h3>
               <ul className="space-y-2">
-                <li><a href="/about" className="text-gray-300 hover:text-white">Our Story</a></li>
-                <li><a href="/careers" className="text-gray-300 hover:text-white">Careers</a></li>
-                <li><a href="/sustainability" className="text-gray-300 hover:text-white">Sustainability</a></li>
+                <li><a href="/about" className="text-gray-300 hover:text-white">{t.ourStory}</a></li>
+                <li><a href="/careers" className="text-gray-300 hover:text-white">{t.careers}</a></li>
+                <li><a href="/sustainability" className="text-gray-300 hover:text-white">{t.sustainability}</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-4">Stay Connected</h3>
-              <p className="text-gray-400 mb-4">Subscribe to our newsletter for exclusive offers and updates</p>
+              <h3 className="text-lg font-medium mb-4">{t.stayConnected}</h3>
+              <p className="text-gray-400 mb-4">{t.subscribeText}</p>
               <form className="flex">
                 <input 
                   type="email" 
-                  placeholder="Your email" 
+                  placeholder={t.yourEmail} 
                   className="px-4 py-2 w-full rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button 
                   type="submit"
                   className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-r-md"
                 >
-                  Subscribe
+                  {t.subscribe}
                 </button>
               </form>
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">© 2023 E-Shop. All rights reserved.</p>
+            <p className="text-gray-400">© 2023 E-Shop. {t.allRightsReserved}</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/privacy" className="text-gray-400 hover:text-white">Privacy Policy</a>
-              <a href="/terms" className="text-gray-400 hover:text-white">Terms of Service</a>
-              <a href="/cookies" className="text-gray-400 hover:text-white">Cookies</a>
+              <a href="/privacy" className="text-gray-400 hover:text-white">{t.privacyPolicy}</a>
+              <a href="/terms" className="text-gray-400 hover:text-white">{t.termsOfService}</a>
+              <a href="/cookies" className="text-gray-400 hover:text-white">{t.cookies}</a>
             </div>
           </div>
         </div>

@@ -272,7 +272,7 @@ export const translations = {
     customer: "Client",
     date: "Date",
     orderId: "ID de commande",
-    inStock: "En stock",
+    adminInStock: "En stock",
     role: "Rôle",
     joinedDate: "Date d'inscription",
     
