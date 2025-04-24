@@ -550,25 +550,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Get cart items
-          const cartItemsTable = cartItems;
-          const cartItems = await db
+          const userCartItems = await db
             .select({
-              id: cartItemsTable.id,
-              productId: cartItemsTable.productId,
-              quantity: cartItemsTable.quantity,
+              id: cartItems.id,
+              productId: cartItems.productId,
+              quantity: cartItems.quantity,
               title: products.title,
               price: products.price
             })
-            .from(cartItemsTable)
-            .innerJoin(products, eq(cartItemsTable.productId, products.id))
-            .where(eq(cartItemsTable.cartId, cart.id));
+            .from(cartItems)
+            .innerJoin(products, eq(cartItems.productId, products.id))
+            .where(eq(cartItems.cartId, cart.id));
           
-          if (cartItems.length === 0) {
+          if (userCartItems.length === 0) {
             return res.status(400).json({ message: "Cannot create order with empty cart" });
           }
           
           // Calculate totals
-          const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          const total = userCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
           const tax = total * 0.1; // 10% tax
           const shipping = 5.99; // Fixed shipping cost
           
@@ -584,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Create order items
-          for (const item of cartItems) {
+          for (const item of userCartItems) {
             await storage.createOrderItem({
               orderId: order.id,
               productId: item.productId,
