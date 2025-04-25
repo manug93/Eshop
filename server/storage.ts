@@ -180,7 +180,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Product methods
-  async getProducts(limit: number = 50, offset: number = 0): Promise<Product[]> {
+  async getProducts(limit: number = 50, offset: number = 0, includeInactive: boolean = false): Promise<Product[]> {
+    // By default, only return active products
+    if (!includeInactive) {
+      return db
+        .select()
+        .from(products)
+        .where(eq(products.active, true))
+        .limit(limit)
+        .offset(offset);
+    }
+    
+    // If includeInactive is true, return all products
     return db
       .select()
       .from(products)
@@ -234,6 +245,29 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedProduct;
   }
+  
+  // Explicitly reactivate a product that was previously deactivated
+  async reactivateProduct(id: number, newStock: number = 1): Promise<Product | undefined> {
+    console.log(`[Server] Reactivating product ID: ${id} with stock: ${newStock}`);
+    
+    const [updatedProduct] = await db
+      .update(products)
+      .set({ 
+        active: true,
+        stock: newStock,
+        updatedAt: new Date()
+      })
+      .where(eq(products.id, id))
+      .returning();
+    
+    if (updatedProduct) {
+      console.log(`[Server] Successfully reactivated product ID: ${id}`);
+    } else {
+      console.log(`[Server] Failed to reactivate product ID: ${id}, product not found`);
+    }
+    
+    return updatedProduct;
+  }
 
   async deleteProduct(id: number): Promise<{ success: boolean; message: string; fullDelete: boolean }> {
     try {
@@ -249,7 +283,7 @@ export class DatabaseStorage implements IStorage {
       
       if (orderItemsWithProduct.length > 0) {
         // If product is referenced in orders, we should not delete it
-        // Instead, mark it as out of stock and make it inactive
+        // Instead, mark it as inactive and out of stock
         console.log(`[Server] Cannot fully delete product ID ${id}, marking as inactive`);
         
         await db
@@ -257,14 +291,14 @@ export class DatabaseStorage implements IStorage {
           .set({ 
             stock: 0,
             featured: false,
-            // We could add a status field to products table in the future
+            active: false, // Explicitly mark as inactive
           })
           .where(eq(products.id, id));
         
         console.log(`[Server] Product ID ${id} marked as inactive`);
         return {
           success: true, 
-          message: `Product ${id} is used in ${orderItemsWithProduct.length} orders and cannot be fully deleted. It has been marked as out of stock instead.`,
+          message: `Product ${id} is used in ${orderItemsWithProduct.length} orders and cannot be fully deleted. It has been marked as inactive and can be reactivated later.`,
           fullDelete: false
         };
       }

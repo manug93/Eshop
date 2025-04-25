@@ -102,6 +102,59 @@ export function setupAdmin(app: Express) {
       next(error);
     }
   });
+  
+  // Get all products including inactive ones (admin only)
+  app.get("/api/admin/products", isAdmin, async (req, res, next) => {
+    try {
+      const includeInactive = req.query.includeInactive === 'true';
+      const products = await storage.getProducts(50, 0, includeInactive);
+      res.json({ products });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Reactivate an inactive product
+  app.post("/api/admin/products/:id/reactivate", isAdmin, async (req, res, next) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const { stock = 1 } = req.body;
+      
+      console.log(`[Admin API] Request received to reactivate product with ID: ${productId} with stock: ${stock}`);
+      
+      if (isNaN(productId)) {
+        console.error(`[Admin API] Invalid product ID: ${req.params.id}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid product ID format' 
+        });
+      }
+      
+      const product = await storage.reactivateProduct(productId, stock);
+      
+      if (!product) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Product not found' 
+        });
+      }
+      
+      console.log(`[Admin API] Successfully reactivated product ID: ${productId}`);
+      
+      // Get updated products list to refresh the UI
+      const updatedProducts = await storage.getProducts(50, 0, true);
+      
+      res.json({
+        success: true,
+        message: `Product "${product.title}" has been successfully reactivated with ${stock} units in stock.`,
+        product,
+        products: updatedProducts
+      });
+    } catch (error) {
+      console.error("[Admin API] Error in reactivate product endpoint:", error);
+      next(error);
+    }
+  });
 
   // Delete all products with zero stock
   app.delete("/api/admin/products/zerostock", isAdmin, async (req, res, next) => {

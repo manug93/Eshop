@@ -46,8 +46,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product routes
   app.get("/api/products", async (req, res, next) => {
     try {
-      const { limit = '20', offset = '0', category, search, sort } = req.query;
+      const { limit = '20', offset = '0', category, search, sort, includeInactive = 'false' } = req.query;
       let query = db.select().from(products);
+      
+      // Only include active products by default, unless explicitly requested
+      // Users should only see active products, admins can request inactive ones
+      if (includeInactive !== 'true') {
+        query = query.where(eq(products.active, true));
+      }
       
       // Apply category filter
       if (category) {
@@ -104,10 +110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const results = await query;
       
-      // Get the total count for pagination
-      const [{ count }] = await db
-        .select({ count: sql`count(${products.id})` })
-        .from(products);
+      // Get the total count for pagination (respecting the active filter)
+      let countQuery = db.select({ count: sql`count(${products.id})` }).from(products);
+      if (includeInactive !== 'true') {
+        countQuery = countQuery.where(eq(products.active, true));
+      }
+      const [{ count }] = await countQuery;
       
       res.json({
         products: results,
@@ -130,6 +138,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Allow viewing inactive products if requested by admin
+      // But warn regular users if the product is inactive
+      if (!product.active) {
+        if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+          return res.status(403).json({ 
+            message: "This product is currently unavailable",
+            product: {
+              id: product.id,
+              title: product.title,
+              active: false
+            }
+          });
+        }
       }
       
       res.json(product);
@@ -164,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cart = await storage.createCart({ userId });
       }
       
-      // Get the cart items with product details
+      // Get the cart items with product details - only show active products
       const cartItemsWithProducts = await db
         .select({
           id: cartItems.id,
@@ -175,11 +198,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           price: products.price,
           discountPercentage: products.discountPercentage,
           thumbnail: products.thumbnail,
-          brand: products.brand
+          brand: products.brand,
+          active: products.active
         })
         .from(cartItems)
         .innerJoin(products, eq(cartItems.productId, products.id))
-        .where(eq(cartItems.cartId, cart.id));
+        .where(
+          and(
+            eq(cartItems.cartId, cart.id),
+            eq(products.active, true) // Only show active products in cart
+          )
+        );
       
       res.json({
         cartId: cart.id,
