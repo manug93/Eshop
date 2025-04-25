@@ -506,7 +506,8 @@ export default function AdminDashboard() {
       stock: product.stock,
       brand: product.brand,
       categoryId: product.categoryId,
-      thumbnail: product.thumbnail
+      thumbnail: product.thumbnail,
+      active: product.active
     });
     setFormError(null);
     setProductDialogOpen(true);
@@ -1148,6 +1149,24 @@ export default function AdminDashboard() {
                 </Select>
               </div>
             </div>
+            
+            {editingProduct?.id && (
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox 
+                  id="active" 
+                  checked={editingProduct?.active !== false}
+                  onCheckedChange={(checked) => 
+                    setEditingProduct(prev => prev ? {...prev, active: !!checked} : null)
+                  }
+                />
+                <label
+                  htmlFor="active"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Active (shown to customers)
+                </label>
+              </div>
+            )}
             
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setProductDialogOpen(false)}>Cancel</Button>
