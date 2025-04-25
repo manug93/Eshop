@@ -363,6 +363,8 @@ export function setupAdmin(app: Express) {
       
       const data = await response.json();
       
+      console.log("DummyJSON response:", JSON.stringify(data, null, 2));
+      
       if (!data.products || !Array.isArray(data.products)) {
         return res.status(500).json({ 
           message: "Invalid response from DummyJSON API" 
@@ -389,8 +391,10 @@ export function setupAdmin(app: Express) {
             images: product.images || []
           };
           
+          console.log("Attempting to create product:", productData);
           // Save to database
           const savedProduct = await storage.createProduct(productData);
+          console.log("Product created successfully:", savedProduct);
           importedProducts.push(savedProduct);
         } catch (error) {
           console.error(`Error importing product ${product.title}:`, error);
