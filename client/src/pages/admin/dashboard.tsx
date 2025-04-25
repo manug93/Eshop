@@ -1833,16 +1833,25 @@ export default function AdminDashboard() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            <div className="border rounded-lg p-4 mb-4 bg-blue-50 text-blue-600">
+              <h3 className="font-medium mb-2">About Category Mappings</h3>
+              <p className="text-sm">
+                These mappings determine how external categories from DummyJSON are assigned to your internal 
+                categories during product import. This ensures imported products are organized according to your 
+                category structure.
+              </p>
+            </div>
+            
             <div className="grid grid-cols-5 gap-4 text-sm font-medium border-b pb-2">
               <div className="col-span-2">External Category</div>
               <div className="col-span-3">Internal Category</div>
             </div>
             
             {categoryMappings.map((mapping, index) => (
-              <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center">
+              <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
                 <div className="col-span-2">
                   <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                    {mapping.externalCategory}
+                    {mapping.externalCategory.replace(/-/g, ' ')}
                   </span>
                 </div>
                 <div className="col-span-3">
@@ -1857,7 +1866,7 @@ export default function AdminDashboard() {
                       setCategoryMappings(newMappings);
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
