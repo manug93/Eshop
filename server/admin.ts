@@ -140,20 +140,38 @@ export function setupAdmin(app: Express) {
   app.delete("/api/admin/products/:id", isAdmin, async (req, res, next) => {
     try {
       const productId = parseInt(req.params.id);
-      console.log(`Deleting product with ID: ${productId}`);
+      console.log(`[Admin API] Request received to delete product with ID: ${productId}`);
       
-      await storage.deleteProduct(productId);
-      console.log(`Successfully processed delete for product ID: ${productId}`);
+      if (isNaN(productId)) {
+        console.error(`[Admin API] Invalid product ID: ${req.params.id}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid product ID format' 
+        });
+      }
       
-      // Force cache invalidation by sending the updated products list
-      const updatedProducts = await db.select().from(products);
-      res.status(200).json({ 
-        success: true, 
-        message: `Product with ID ${productId} has been processed.`,
-        products: updatedProducts
-      });
+      try {
+        await storage.deleteProduct(productId);
+        console.log(`[Admin API] Successfully processed delete for product ID: ${productId}`);
+        
+        // Force cache invalidation by sending the updated products list
+        const updatedProducts = await db.select().from(products);
+        console.log(`[Admin API] Returning ${updatedProducts.length} products after deletion`);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: `Product with ID ${productId} has been processed.`,
+          products: updatedProducts
+        });
+      } catch (deleteError) {
+        console.error(`[Admin API] Error while deleting product ID ${productId}:`, deleteError);
+        return res.status(500).json({ 
+          success: false, 
+          message: `Error processing product deletion: ${deleteError.message}` 
+        });
+      }
     } catch (error) {
-      console.error("Error in delete product endpoint:", error);
+      console.error("[Admin API] Error in delete product endpoint:", error);
       next(error);
     }
   });

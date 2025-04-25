@@ -244,6 +244,7 @@ export default function AdminDashboard() {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: number) => {
+      console.log("Delete mutation called with product ID:", productId);
       await apiRequest('DELETE', `/api/admin/products/${productId}`);
     },
     onSuccess: () => {
@@ -1226,7 +1227,10 @@ export default function AdminDashboard() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={executeProductDeletion}
+              onClick={(e) => {
+                console.log("Delete confirmation clicked");
+                executeProductDeletion();
+              }}
               className="bg-red-600 text-white hover:bg-red-700"
             >
               {deleteProductMutation.isPending ? (

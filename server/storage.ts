@@ -237,15 +237,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: number): Promise<boolean> {
     try {
+      console.log(`[Server] Starting deletion process for product ID: ${id}`);
+      
       // First check if this product is referenced in any order items
       const orderItemsWithProduct = await db
         .select()
         .from(orderItems)
         .where(eq(orderItems.productId, id));
       
+      console.log(`[Server] Product ID ${id} is referenced in ${orderItemsWithProduct.length} order items`);
+      
       if (orderItemsWithProduct.length > 0) {
         // If product is referenced in orders, we should not delete it
         // Instead, mark it as out of stock and make it inactive
+        console.log(`[Server] Cannot fully delete product ID ${id}, marking as inactive`);
+        
         await db
           .update(products)
           .set({ 
@@ -255,17 +261,20 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(products.id, id));
         
+        console.log(`[Server] Product ID ${id} marked as inactive`);
         return true;
       }
       
       // If not referenced, we can safely delete it
+      console.log(`[Server] Executing deletion of product ID ${id}`);
       const result = await db
         .delete(products)
         .where(eq(products.id, id));
-        
+      
+      console.log(`[Server] Product ID ${id} successfully deleted`);  
       return true; // If no error was thrown, deletion was successful
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error(`[Server] Error deleting product ID ${id}:`, error);
       throw error;
     }
   }
