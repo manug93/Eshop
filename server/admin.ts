@@ -334,4 +334,78 @@ export function setupAdmin(app: Express) {
       next(error);
     }
   });
+  
+  // Import products from DummyJSON API
+  app.post("/api/admin/products/import", isAdmin, async (req, res, next) => {
+    try {
+      const { category, limit = 5 } = req.body;
+      
+      if (limit <= 0 || limit > 30) {
+        return res.status(400).json({ 
+          message: "Limit must be between 1 and 30" 
+        });
+      }
+      
+      // Build the URL based on whether a category is provided
+      const baseUrl = 'https://dummyjson.com/products';
+      const url = category 
+        ? `${baseUrl}/category/${category}?limit=${limit}`
+        : `${baseUrl}?limit=${limit}`;
+      
+      // Fetch data from DummyJSON API
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({
+          message: `Error fetching from DummyJSON: ${response.statusText}`
+        });
+      }
+      
+      const data = await response.json();
+      
+      if (!data.products || !Array.isArray(data.products)) {
+        return res.status(500).json({ 
+          message: "Invalid response from DummyJSON API" 
+        });
+      }
+      
+      // Process each product and add to database
+      const importedProducts = [];
+      
+      for (const product of data.products) {
+        try {
+          // Map DummyJSON product to our schema
+          const productData = {
+            title: product.title,
+            description: product.description,
+            price: product.price,
+            thumbnail: product.thumbnail,
+            brand: product.brand,
+            stock: product.stock,
+            categoryId: null, // We'll need to map this if needed
+            discountPercentage: product.discountPercentage || null,
+            rating: product.rating || null,
+            // Use the images array directly 
+            images: product.images || []
+          };
+          
+          // Save to database
+          const savedProduct = await storage.createProduct(productData);
+          importedProducts.push(savedProduct);
+        } catch (error) {
+          console.error(`Error importing product ${product.title}:`, error);
+          // Continue with next product even if one fails
+        }
+      }
+      
+      res.status(200).json({
+        success: true,
+        count: importedProducts.length,
+        products: importedProducts
+      });
+    } catch (error) {
+      console.error("Error importing products:", error);
+      next(error);
+    }
+  });
 }
