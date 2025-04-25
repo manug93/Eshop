@@ -1143,16 +1143,16 @@ export default function AdminDashboard() {
               <div className="space-y-2">
                 <Label htmlFor="categoryId">Category</Label>
                 <Select 
-                  value={editingProduct?.categoryId?.toString() || ""}
+                  value={editingProduct?.categoryId?.toString() || "null"}
                   onValueChange={(value) => setEditingProduct(prev => 
-                    prev ? {...prev, categoryId: value ? parseInt(value) : null} : null
+                    prev ? {...prev, categoryId: value && value !== "null" ? parseInt(value) : null} : null
                   )}
                 >
                   <SelectTrigger id="categoryId">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="null">None</SelectItem>
                     {categories && categories.map(category => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
