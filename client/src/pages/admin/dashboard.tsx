@@ -101,6 +101,8 @@ export default function AdminDashboard() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importCategory, setImportCategory] = useState<string>("all");
   const [importCount, setImportCount] = useState<number>(5);
+  const [importSkip, setImportSkip] = useState<number>(0);
+  const [importCheckDuplicates, setImportCheckDuplicates] = useState<boolean>(true);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -327,10 +329,22 @@ export default function AdminDashboard() {
   
   // Import products from DummyJSON API
   const importProductsMutation = useMutation({
-    mutationFn: async ({ category, limit }: { category: string; limit: number }) => {
+    mutationFn: async ({ 
+      category, 
+      limit,
+      skip,
+      checkDuplicates 
+    }: { 
+      category: string; 
+      limit: number;
+      skip: number;
+      checkDuplicates: boolean;
+    }) => {
       const response = await apiRequest('POST', `/api/admin/products/import`, { 
         category, 
-        limit 
+        limit,
+        skip,
+        checkDuplicates 
       });
       return response.json();
     },
@@ -442,7 +456,9 @@ export default function AdminDashboard() {
     e.preventDefault();
     importProductsMutation.mutate({
       category: importCategory,
-      limit: importCount
+      limit: importCount,
+      skip: importSkip,
+      checkDuplicates: importCheckDuplicates
     });
   };
 
@@ -1041,6 +1057,31 @@ export default function AdminDashboard() {
                 required
               />
               <p className="text-sm text-gray-500">Maximum: 30 products</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="skip">Skip First N Products</Label>
+              <Input 
+                id="skip" 
+                type="number" 
+                min="0"
+                value={importSkip} 
+                onChange={(e) => setImportSkip(parseInt(e.target.value) || 0)}
+              />
+              <p className="text-sm text-gray-500">Use this for pagination to avoid duplicate imports</p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="checkDuplicates"
+                checked={importCheckDuplicates}
+                onChange={(e) => setImportCheckDuplicates(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <Label htmlFor="checkDuplicates" className="text-sm font-normal">
+                Check for duplicate product titles
+              </Label>
             </div>
             
             <DialogFooter className="mt-6">

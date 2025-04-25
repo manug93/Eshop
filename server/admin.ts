@@ -338,7 +338,12 @@ export function setupAdmin(app: Express) {
   // Import products from DummyJSON API
   app.post("/api/admin/products/import", isAdmin, async (req, res, next) => {
     try {
-      const { category, limit = 5 } = req.body;
+      const { 
+        category, 
+        limit = 5, 
+        skip = 0,
+        checkDuplicates = true
+      } = req.body;
       
       if (limit <= 0 || limit > 30) {
         return res.status(400).json({ 
@@ -346,11 +351,17 @@ export function setupAdmin(app: Express) {
         });
       }
       
+      if (skip < 0) {
+        return res.status(400).json({
+          message: "Skip must be 0 or a positive number"
+        });
+      }
+      
       // Build the URL based on whether a category is provided
       const baseUrl = 'https://dummyjson.com/products';
       const url = category && category !== 'all'
-        ? `${baseUrl}/category/${category}?limit=${limit}`
-        : `${baseUrl}?limit=${limit}`;
+        ? `${baseUrl}/category/${category}?limit=${limit}&skip=${skip}`
+        : `${baseUrl}?limit=${limit}&skip=${skip}`;
       
       // Fetch data from DummyJSON API
       const response = await fetch(url);
