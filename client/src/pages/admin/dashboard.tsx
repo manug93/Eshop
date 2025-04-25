@@ -106,6 +106,10 @@ export default function AdminDashboard() {
   
   // Zero stock deletion state
   const [zeroStockConfirmOpen, setZeroStockConfirmOpen] = useState(false);
+  
+  // Product deletion state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
