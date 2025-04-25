@@ -219,7 +219,7 @@ export default function AdminDashboard() {
   });
   
   // Fetching categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery<{id: number; name: string; slug: string}[]>({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
     queryFn: async () => {
       try {
@@ -737,7 +737,7 @@ export default function AdminDashboard() {
     setCategoryDialogOpen(true);
   };
   
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: {id: number; name: string; slug: string; createdAt?: string; updatedAt?: string}) => {
     setEditingCategory({
       id: category.id,
       name: category.name,
@@ -1221,6 +1221,94 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
         
+        {/* Categories Tab */}
+        <TabsContent value="categories">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Category Management</CardTitle>
+                <CardDescription>Create and manage product categories</CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleAddCategory}
+                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleOpenCategoryMapping}
+                  className="px-4 py-2 rounded"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Category Mappings
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {categoriesLoading ? (
+                <div className="text-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                  <p className="text-gray-500">Loading categories...</p>
+                </div>
+              ) : categories && categories.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Slug</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.map((category) => (
+                      <TableRow key={category.id}>
+                        <TableCell>#{category.id}</TableCell>
+                        <TableCell>{category.name}</TableCell>
+                        <TableCell>
+                          <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                            {category.slug}
+                          </span>
+                        </TableCell>
+                        <TableCell>{category.createdAt ? formatDate(category.createdAt) : 'N/A'}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditCategory(category)}
+                              className="h-8 px-2 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+                            >
+                              <Edit className="h-3.5 w-3.5 mr-1" />
+                              <span>Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteCategoryConfirm(category.id)}
+                              className="h-8 px-2 text-red-600 border-red-200 bg-red-50 hover:bg-red-100"
+                              disabled={category.id === 1} // Protect default category
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" />
+                              <span>Delete</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-6 text-gray-500">No categories to display</div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
         {/* Users Tab */}
         <TabsContent value="users">
           <Card>
@@ -1638,6 +1726,169 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Category Dialog */}
+      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingCategory?.id ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+            <DialogDescription>
+              {editingCategory?.id 
+                ? 'Edit the details of the existing category.' 
+                : 'Create a new category for products.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmitCategory} className="space-y-4">
+            {categoryFormError && (
+              <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded p-3">
+                {categoryFormError}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="name">Category Name</Label>
+              <Input 
+                id="name" 
+                value={editingCategory?.name || ''} 
+                onChange={(e) => setEditingCategory(prev => prev ? {...prev, name: e.target.value} : null)}
+                placeholder="Category name"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="slug">
+                Slug 
+                <span className="text-gray-500 text-xs ml-2">(Leave empty to auto-generate from name)</span>
+              </Label>
+              <Input 
+                id="slug" 
+                value={editingCategory?.slug || ''} 
+                onChange={(e) => setEditingCategory(prev => prev ? {...prev, slug: e.target.value} : null)}
+                placeholder="category-slug"
+              />
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => setCategoryDialogOpen(false)}>Cancel</Button>
+              <Button 
+                type="submit" 
+                disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+              >
+                {createCategoryMutation.isPending || updateCategoryMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Category'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Category Confirmation Dialog */}
+      <AlertDialog open={deleteCategoryConfirmOpen} onOpenChange={setDeleteCategoryConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete This Category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the category.
+              Products associated with this category will be moved to the default category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeDeleteCategory}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {deleteCategoryMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Category'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Category Mapping Dialog */}
+      <Dialog open={categoryMappingDialogOpen} onOpenChange={setCategoryMappingDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Category Mappings for Import</DialogTitle>
+            <DialogDescription>
+              Map external DummyJSON categories to your internal categories to ensure products 
+              are assigned correctly during import.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-5 gap-4 text-sm font-medium border-b pb-2">
+              <div className="col-span-2">External Category</div>
+              <div className="col-span-3">Internal Category</div>
+            </div>
+            
+            {categoryMappings.map((mapping, index) => (
+              <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center">
+                <div className="col-span-2">
+                  <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
+                    {mapping.externalCategory}
+                  </span>
+                </div>
+                <div className="col-span-3">
+                  <Select 
+                    value={mapping.internalCategoryId.toString()}
+                    onValueChange={(value) => {
+                      const newMappings = [...categoryMappings];
+                      newMappings[index] = {
+                        ...newMappings[index],
+                        internalCategoryId: parseInt(value)
+                      };
+                      setCategoryMappings(newMappings);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories && categories.map(category => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCategoryMappingDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSaveCategoryMappings}
+              disabled={saveCategoryMappingsMutation.isPending}
+            >
+              {saveCategoryMappingsMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Mappings'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
