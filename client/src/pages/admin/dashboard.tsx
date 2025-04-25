@@ -35,6 +35,11 @@ interface Order {
   total: number;
   createdAt: string;
   updatedAt: string;
+  paymentIntentId?: string;
+  stripeChargeId?: string;
+  stripeRefNumber?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   user?: {
     username: string;
     email: string;
@@ -406,6 +411,7 @@ export default function AdminDashboard() {
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Stripe Reference</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
