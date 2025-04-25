@@ -382,8 +382,9 @@ export function setupAdmin(app: Express) {
             description: product.description,
             price: product.price,
             thumbnail: product.thumbnail,
-            brand: product.brand,
-            stock: product.stock,
+            // Ensure brand has a default value if it's missing
+            brand: product.brand || product.category || "Unknown Brand",
+            stock: product.stock || 0,
             categoryId: null, // We'll need to map this if needed
             discountPercentage: product.discountPercentage || null,
             rating: product.rating || null,
