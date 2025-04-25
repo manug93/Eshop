@@ -320,7 +320,9 @@ export default function AdminDashboard() {
     }
   });
   
-  // Import products from DummyJSON mutation
+
+  
+  // Import products from DummyJSON API
   const importProductsMutation = useMutation({
     mutationFn: async ({ category, limit }: { category: string; limit: number }) => {
       const response = await apiRequest('POST', `/api/admin/products/import`, { 
