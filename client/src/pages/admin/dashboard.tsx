@@ -137,7 +137,7 @@ export default function AdminDashboard() {
   });
 
   // Fetching products
-  const { data: products, isLoading: productsLoading } = useQuery<Product[]>({
+  const { data: productsData, isLoading: productsLoading } = useQuery<{ products: Product[], total: number }>({
     queryKey: ['/api/products'],
     queryFn: async () => {
       try {
@@ -145,10 +145,13 @@ export default function AdminDashboard() {
         return await response.json();
       } catch (error) {
         console.error('Error fetching products:', error);
-        return [];
+        return { products: [], total: 0 };
       }
     }
   });
+  
+  // Extract products array from the response
+  const products = productsData?.products || [];
 
   // Fetching users
   const { data: users, isLoading: usersLoading } = useQuery<User[]>({
