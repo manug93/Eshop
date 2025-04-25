@@ -69,6 +69,10 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   paymentIntentId: text("payment_intent_id"),
+  stripeChargeId: text("stripe_charge_id"),
+  stripeRefNumber: text("stripe_ref_number"),
+  paymentMethod: text("payment_method"),
+  paymentStatus: text("payment_status").default("pending"),
   shippingAddress: json("shipping_address").$type<{
     street: string;
     city: string;
@@ -143,6 +147,18 @@ export const addresses = pgTable("addresses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Reviews table
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5
+  comment: text("comment"),
+  isVerifiedPurchase: boolean("is_verified_purchase").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Translations table (for multilanguage support)
 export const translations = pgTable("translations", {
   id: serial("id").primaryKey(),
@@ -159,6 +175,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   carts: many(carts),
   wishlists: many(wishlists),
   addresses: many(addresses),
+  reviews: many(reviews),
 }));
 
 export const addressesRelations = relations(addresses, ({ one }) => ({
@@ -176,6 +193,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   orderItems: many(orderItems),
   cartItems: many(cartItems),
   wishlists: many(wishlists),
+  reviews: many(reviews),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -227,6 +245,17 @@ export const wishlistsRelations = relations(wishlists, ({ one }) => ({
   }),
   product: one(products, {
     fields: [wishlists.productId],
+    references: [products.id],
+  }),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  user: one(users, {
+    fields: [reviews.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [reviews.productId],
     references: [products.id],
   }),
 }));
@@ -289,6 +318,12 @@ export const insertAddressSchema = createInsertSchema(addresses).omit({
   updatedAt: true,
 });
 
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertTranslationSchema = createInsertSchema(translations).omit({
   id: true,
 });
@@ -326,3 +361,6 @@ export type Address = typeof addresses.$inferSelect;
 
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Translation = typeof translations.$inferSelect;
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
