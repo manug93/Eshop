@@ -96,6 +96,11 @@ export default function AdminDashboard() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  
+  // Import dialog state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importCategory, setImportCategory] = useState<string>("");
+  const [importCount, setImportCount] = useState<number>(5);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -154,6 +159,20 @@ export default function AdminDashboard() {
         return await response.json();
       } catch (error) {
         console.error('Error fetching users:', error);
+        return [];
+      }
+    }
+  });
+  
+  // Fetching categories
+  const { data: categories, isLoading: categoriesLoading } = useQuery<{id: number; name: string; slug: string}[]>({
+    queryKey: ['/api/categories'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', '/api/categories');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching categories:', error);
         return [];
       }
     }
@@ -300,6 +319,33 @@ export default function AdminDashboard() {
       });
     }
   });
+  
+  // Import products from DummyJSON mutation
+  const importProductsMutation = useMutation({
+    mutationFn: async ({ category, limit }: { category: string; limit: number }) => {
+      const response = await apiRequest('POST', `/api/admin/products/import`, { 
+        category, 
+        limit 
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setImportDialogOpen(false);
+      toast({
+        title: "Products imported",
+        description: `${data.count} products have been successfully imported.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error importing products",
+        description: error.message || "An error occurred while importing products.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Handle order status update
   const handleUpdateOrderStatus = (orderId: number, newStatus: string) => {
@@ -384,6 +430,15 @@ export default function AdminDashboard() {
     } else {
       createProductMutation.mutate(editingProduct);
     }
+  };
+  
+  // Handle form submission for importing products
+  const handleImportProducts = (e: React.FormEvent) => {
+    e.preventDefault();
+    importProductsMutation.mutate({
+      category: importCategory,
+      limit: importCount
+    });
   };
 
   // Format date helper
@@ -658,12 +713,19 @@ export default function AdminDashboard() {
               <CardDescription>View and manage your product inventory</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
+              <div className="mb-4 flex gap-2">
                 <Button 
                   className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
                   onClick={handleAddProduct}
                 >
                   Add New Product
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="px-4 py-2 rounded"
+                  onClick={() => setImportDialogOpen(true)}
+                >
+                  Import from DummyJSON
                 </Button>
               </div>
               {products && products.length > 0 ? (
@@ -861,15 +923,39 @@ export default function AdminDashboard() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="thumbnail">Thumbnail URL</Label>
-              <Input 
-                id="thumbnail" 
-                value={editingProduct?.thumbnail || ''} 
-                onChange={(e) => setEditingProduct(prev => prev ? {...prev, thumbnail: e.target.value} : null)}
-                placeholder="https://example.com/image.jpg"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="thumbnail">Thumbnail URL</Label>
+                <Input 
+                  id="thumbnail" 
+                  value={editingProduct?.thumbnail || ''} 
+                  onChange={(e) => setEditingProduct(prev => prev ? {...prev, thumbnail: e.target.value} : null)}
+                  placeholder="https://example.com/image.jpg"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="categoryId">Category</Label>
+                <Select 
+                  value={editingProduct?.categoryId?.toString() || ""}
+                  onValueChange={(value) => setEditingProduct(prev => 
+                    prev ? {...prev, categoryId: value ? parseInt(value) : null} : null
+                  )}
+                >
+                  <SelectTrigger id="categoryId">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {categories && categories.map(category => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             <DialogFooter className="mt-6">
@@ -885,6 +971,86 @@ export default function AdminDashboard() {
                   </>
                 ) : (
                   'Save Product'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Import Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Import Products from DummyJSON</DialogTitle>
+            <DialogDescription>
+              Import products from DummyJSON API. You can specify a category and the number of products to import.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleImportProducts} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category (optional)</Label>
+              <Select 
+                value={importCategory} 
+                onValueChange={setImportCategory}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="smartphones">Smartphones</SelectItem>
+                  <SelectItem value="laptops">Laptops</SelectItem>
+                  <SelectItem value="fragrances">Fragrances</SelectItem>
+                  <SelectItem value="skincare">Skincare</SelectItem>
+                  <SelectItem value="groceries">Groceries</SelectItem>
+                  <SelectItem value="home-decoration">Home Decoration</SelectItem>
+                  <SelectItem value="furniture">Furniture</SelectItem>
+                  <SelectItem value="tops">Tops</SelectItem>
+                  <SelectItem value="womens-dresses">Women's Dresses</SelectItem>
+                  <SelectItem value="womens-shoes">Women's Shoes</SelectItem>
+                  <SelectItem value="mens-shirts">Men's Shirts</SelectItem>
+                  <SelectItem value="mens-shoes">Men's Shoes</SelectItem>
+                  <SelectItem value="mens-watches">Men's Watches</SelectItem>
+                  <SelectItem value="womens-watches">Women's Watches</SelectItem>
+                  <SelectItem value="womens-bags">Women's Bags</SelectItem>
+                  <SelectItem value="womens-jewellery">Women's Jewellery</SelectItem>
+                  <SelectItem value="sunglasses">Sunglasses</SelectItem>
+                  <SelectItem value="automotive">Automotive</SelectItem>
+                  <SelectItem value="motorcycle">Motorcycle</SelectItem>
+                  <SelectItem value="lighting">Lighting</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="limit">Number of Products</Label>
+              <Input 
+                id="limit" 
+                type="number" 
+                min="1" 
+                max="30" 
+                value={importCount} 
+                onChange={(e) => setImportCount(parseInt(e.target.value) || 5)}
+                required
+              />
+              <p className="text-sm text-gray-500">Maximum: 30 products</p>
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
+              <Button 
+                type="submit" 
+                disabled={importProductsMutation.isPending}
+              >
+                {importProductsMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  'Import Products'
                 )}
               </Button>
             </DialogFooter>
