@@ -325,8 +325,11 @@ export default function AdminDashboard() {
   const updateProductMutation = useMutation({
     mutationFn: async (productData: ProductFormData) => {
       const { id, ...data } = productData;
+      console.log("Sending PATCH request to server with data:", data);
       const response = await apiRequest('PATCH', `/api/admin/products/${id}`, data);
-      return response.json();
+      const responseData = await response.json();
+      console.log("Server response:", responseData);
+      return responseData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -541,9 +544,17 @@ export default function AdminDashboard() {
       return;
     }
     
+    console.log("Submitting product data:", editingProduct);
+    
     // Submit form data
     if (editingProduct.id) {
-      updateProductMutation.mutate(editingProduct);
+      // For update operations, explicitly ensure active state is included
+      const dataToUpdate = {
+        ...editingProduct,
+        active: editingProduct.active !== false // Ensure active is a boolean
+      };
+      console.log("Updating product with:", dataToUpdate);
+      updateProductMutation.mutate(dataToUpdate);
     } else {
       createProductMutation.mutate(editingProduct);
     }
@@ -1156,9 +1167,15 @@ export default function AdminDashboard() {
                 <Checkbox 
                   id="active" 
                   checked={editingProduct?.active !== false}
-                  onCheckedChange={(checked: boolean) => 
-                    setEditingProduct(prev => prev ? {...prev, active: checked} : null)
-                  }
+                  onCheckedChange={(checked: boolean) => {
+                    console.log("Active checkbox changed to:", checked);
+                    setEditingProduct(prev => {
+                      if (!prev) return null;
+                      const updated = {...prev, active: checked};
+                      console.log("Updated editingProduct:", updated);
+                      return updated;
+                    });
+                  }}
                 />
                 <label
                   htmlFor="active"
