@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X } from "lucide-react";
+import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X, Edit, RefreshCw } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -786,11 +786,12 @@ export default function AdminDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"
+                                className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center gap-1"
                                 onClick={() => handleRefundOrderConfirm(order.id, order.paymentIntentId || '')}
                                 disabled={refundOrderMutation.isPending}
                               >
-                                Refund
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                <span>Refund</span>
                               </Button>
                             )}
                           </div>
@@ -872,20 +873,24 @@ export default function AdminDashboard() {
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button 
-                              variant="ghost" 
-                              className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                              variant="outline" 
+                              size="sm"
+                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200 flex items-center gap-1"
                               onClick={() => handleEditProduct(product)}
                               disabled={updateProductMutation.isPending}
                             >
-                              Edit
+                              <Edit className="h-3.5 w-3.5" />
+                              <span>Edit</span>
                             </Button>
                             <Button 
-                              variant="ghost" 
-                              className="text-red-600 hover:text-red-800 p-1 h-auto"
+                              variant="outline" 
+                              size="sm"
+                              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center gap-1"
                               onClick={() => handleDeleteProductConfirm(product.id)}
                               disabled={deleteProductMutation.isPending}
                             >
-                              Delete
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>Delete</span>
                             </Button>
                           </div>
                         </TableCell>
