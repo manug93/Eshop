@@ -433,6 +433,15 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell className="text-right">${order.total?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
+                          {order.stripeRefNumber ? (
+                            <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                              {order.stripeRefNumber}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex space-x-2">
                             <select 
                               className="text-sm border border-gray-300 rounded px-2 py-1"
