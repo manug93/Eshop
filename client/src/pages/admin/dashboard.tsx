@@ -78,6 +78,15 @@ interface User {
   updatedAt: string;
 }
 
+// Interface for category
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Interface for product form data
 interface ProductFormData {
   id?: number;
@@ -89,6 +98,19 @@ interface ProductFormData {
   categoryId: number | null;
   thumbnail: string;
   active: boolean; // Make active a required field instead of optional
+}
+
+// Interface for category form data
+interface CategoryFormData {
+  id?: number;
+  name: string;
+  slug: string;
+}
+
+// Mapping interface for external to internal category
+interface CategoryMapping {
+  externalCategory: string;
+  internalCategoryId: number;
 }
 
 export default function AdminDashboard() {
@@ -118,6 +140,17 @@ export default function AdminDashboard() {
   // Order refund state
   const [refundConfirmOpen, setRefundConfirmOpen] = useState(false);
   const [orderToRefund, setOrderToRefund] = useState<{orderId: number; paymentIntentId: string} | null>(null);
+  
+  // Category management state
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryFormData | null>(null);
+  const [categoryFormError, setCategoryFormError] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+  const [deleteCategoryConfirmOpen, setDeleteCategoryConfirmOpen] = useState(false);
+  
+  // Category mapping state for DummyJSON import
+  const [categoryMappingDialogOpen, setCategoryMappingDialogOpen] = useState(false);
+  const [categoryMappings, setCategoryMappings] = useState<CategoryMapping[]>([]);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -401,7 +434,102 @@ export default function AdminDashboard() {
     }
   });
   
-  // Import products from DummyJSON API
+  // Create category mutation
+  const createCategoryMutation = useMutation({
+    mutationFn: async (categoryData: CategoryFormData) => {
+      const response = await apiRequest('POST', '/api/admin/categories', categoryData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      setCategoryDialogOpen(false);
+      setEditingCategory(null);
+      toast({
+        title: "Category created",
+        description: "The category has been successfully created.",
+      });
+    },
+    onError: (error: any) => {
+      setCategoryFormError(error.message || "An error occurred while creating the category.");
+      toast({
+        title: "Error creating category",
+        description: error.message || "An error occurred while creating the category.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Update category mutation
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (categoryData: CategoryFormData) => {
+      const { id, ...data } = categoryData;
+      const response = await apiRequest('PATCH', `/api/admin/categories/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      setCategoryDialogOpen(false);
+      setEditingCategory(null);
+      toast({
+        title: "Category updated",
+        description: "The category has been successfully updated.",
+      });
+    },
+    onError: (error: any) => {
+      setCategoryFormError(error.message || "An error occurred while updating the category.");
+      toast({
+        title: "Error updating category",
+        description: error.message || "An error occurred while updating the category.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Delete category mutation
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/categories/${categoryId}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      toast({
+        title: "Category deleted",
+        description: data.message || "The category has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting category",
+        description: error.message || "An error occurred while deleting the category. It may be in use by products.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Save category mappings mutation
+  const saveCategoryMappingsMutation = useMutation({
+    mutationFn: async (mappings: CategoryMapping[]) => {
+      const response = await apiRequest('POST', '/api/admin/category-mappings', { mappings });
+      return response.json();
+    },
+    onSuccess: () => {
+      setCategoryMappingDialogOpen(false);
+      toast({
+        title: "Category mappings saved",
+        description: "The category mappings have been successfully saved.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error saving category mappings",
+        description: error.message || "An error occurred while saving category mappings.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Import products from DummyJSON API with category mappings
   const importProductsMutation = useMutation({
     mutationFn: async ({ 
       category, 
@@ -418,7 +546,8 @@ export default function AdminDashboard() {
         category, 
         limit,
         skip,
-        checkDuplicates 
+        checkDuplicates,
+        categoryMappings: categoryMappings.length > 0 ? categoryMappings : undefined
       });
       return response.json();
     },
@@ -597,6 +726,113 @@ export default function AdminDashboard() {
   const handleReactivateProduct = (productId: number) => {
     reactivateProductMutation.mutate(productId);
   };
+  
+  // Category handlers
+  const handleAddCategory = () => {
+    setEditingCategory({
+      name: "",
+      slug: "",
+    });
+    setCategoryFormError(null);
+    setCategoryDialogOpen(true);
+  };
+  
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+    });
+    setCategoryFormError(null);
+    setCategoryDialogOpen(true);
+  };
+  
+  const handleDeleteCategoryConfirm = (categoryId: number) => {
+    setCategoryToDelete(categoryId);
+    setDeleteCategoryConfirmOpen(true);
+  };
+  
+  const executeDeleteCategory = () => {
+    if (categoryToDelete) {
+      deleteCategoryMutation.mutate(categoryToDelete);
+      setDeleteCategoryConfirmOpen(false);
+      setCategoryToDelete(null);
+    }
+  };
+  
+  const handleSubmitCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingCategory) return;
+    
+    // Validate form data
+    if (!editingCategory.name) {
+      setCategoryFormError("Name is required");
+      return;
+    }
+    
+    if (!editingCategory.slug) {
+      // Auto-generate slug from name if empty
+      const generatedSlug = editingCategory.name.toLowerCase()
+        .replace(/[^\w\s-]/g, '')  // Remove special chars
+        .replace(/\s+/g, '-')      // Replace spaces with -
+        .replace(/--+/g, '-');     // Replace multiple - with single -
+      
+      setEditingCategory({
+        ...editingCategory,
+        slug: generatedSlug
+      });
+      
+      // Use the updated object directly
+      if (editingCategory.id) {
+        updateCategoryMutation.mutate({
+          ...editingCategory,
+          slug: generatedSlug
+        });
+      } else {
+        createCategoryMutation.mutate({
+          ...editingCategory,
+          slug: generatedSlug
+        });
+      }
+      return;
+    }
+    
+    // Submit form data
+    if (editingCategory.id) {
+      updateCategoryMutation.mutate(editingCategory);
+    } else {
+      createCategoryMutation.mutate(editingCategory);
+    }
+  };
+  
+  // Open category mapping dialog for DummyJSON categories
+  const handleOpenCategoryMapping = () => {
+    // Initialize mappings with external categories if none exist
+    if (categoryMappings.length === 0) {
+      const externalCategories = [
+        "smartphones", "laptops", "fragrances", "skincare", "groceries", 
+        "home-decoration", "furniture", "tops", "womens-dresses", 
+        "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", 
+        "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", 
+        "automotive", "motorcycle", "lighting"
+      ];
+      
+      setCategoryMappings(
+        externalCategories.map(cat => ({
+          externalCategory: cat,
+          internalCategoryId: categories && categories.length > 0 ? categories[0].id : 1
+        }))
+      );
+    }
+    
+    setCategoryMappingDialogOpen(true);
+  };
+  
+  // Save category mappings
+  const handleSaveCategoryMappings = () => {
+    saveCategoryMappingsMutation.mutate(categoryMappings);
+  };
 
   // Format date helper
   const formatDate = (dateString: string) => {
@@ -637,10 +873,11 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-4 max-w-2xl">
+        <TabsList className="grid grid-cols-5 max-w-3xl">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         
