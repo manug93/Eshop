@@ -47,6 +47,7 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   featured: boolean("featured").default(false),
+  active: boolean("active").default(true),
 });
 
 // Categories table
