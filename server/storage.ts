@@ -238,11 +238,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: number, productData: Partial<InsertProduct>): Promise<Product | undefined> {
+    console.log(`[Server] Updating product ID: ${id} with data:`, productData);
+    
+    // Make sure active property is handled correctly
+    if (productData.active !== undefined) {
+      console.log(`[Server] Active status being updated to:`, productData.active);
+    }
+    
     const [updatedProduct] = await db
       .update(products)
       .set(productData)
       .where(eq(products.id, id))
       .returning();
+      
+    console.log(`[Server] Updated product:`, updatedProduct);
     return updatedProduct;
   }
   

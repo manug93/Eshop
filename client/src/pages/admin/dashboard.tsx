@@ -88,7 +88,7 @@ interface ProductFormData {
   brand: string; 
   categoryId: number | null;
   thumbnail: string;
-  active?: boolean;
+  active: boolean; // Make active a required field instead of optional
 }
 
 export default function AdminDashboard() {
@@ -494,7 +494,8 @@ export default function AdminDashboard() {
       stock: 0,
       brand: "",
       categoryId: null,
-      thumbnail: ""
+      thumbnail: "",
+      active: true // Default to active for new products
     });
     setFormError(null);
     setProductDialogOpen(true);
