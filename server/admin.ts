@@ -100,12 +100,35 @@ export function setupAdmin(app: Express) {
     }
   });
 
-  app.delete("/api/admin/products/:id", isAdmin, async (req, res, next) => {
+  // Delete all products with zero stock
+  app.delete("/api/admin/products/zerostock", isAdmin, async (req, res, next) => {
     try {
-      const productId = parseInt(req.params.id);
-      await storage.deleteProduct(productId);
-      res.sendStatus(204);
+      // First get all products with zero stock
+      const zeroStockProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.stock, 0));
+      
+      let deleted = 0;
+      let deactivated = 0;
+      
+      // Process each product
+      for (const product of zeroStockProducts) {
+        try {
+          await storage.deleteProduct(product.id);
+          deleted++;
+        } catch (error) {
+          console.error(`Could not delete product ${product.id}, marking as inactive`);
+          deactivated++;
+        }
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: `Processed ${zeroStockProducts.length} products: ${deleted} deleted, ${deactivated} deactivated`
+      });
     } catch (error) {
+      console.error("Error in delete zero stock products endpoint:", error);
       next(error);
     }
   });

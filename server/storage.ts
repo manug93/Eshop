@@ -236,10 +236,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProduct(id: number): Promise<boolean> {
-    const result = await db
-      .delete(products)
-      .where(eq(products.id, id));
-    return true; // If no error was thrown, deletion was successful
+    try {
+      // First check if this product is referenced in any order items
+      const orderItemsWithProduct = await db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.productId, id));
+      
+      if (orderItemsWithProduct.length > 0) {
+        // If product is referenced in orders, we should not delete it
+        // Instead, mark it as out of stock and make it inactive
+        await db
+          .update(products)
+          .set({ 
+            stock: 0,
+            featured: false,
+            // We could add a status field to products table in the future
+          })
+          .where(eq(products.id, id));
+        
+        return true;
+      }
+      
+      // If not referenced, we can safely delete it
+      const result = await db
+        .delete(products)
+        .where(eq(products.id, id));
+        
+      return true; // If no error was thrown, deletion was successful
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      throw error;
+    }
   }
 
   // Category methods
