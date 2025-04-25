@@ -7,7 +7,10 @@ import {
   users, 
   promotions,
   products,
-  orders
+  orders,
+  orderItems,
+  cartItems,
+  wishlists
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
@@ -137,8 +140,18 @@ export function setupAdmin(app: Express) {
   app.delete("/api/admin/products/:id", isAdmin, async (req, res, next) => {
     try {
       const productId = parseInt(req.params.id);
+      console.log(`Deleting product with ID: ${productId}`);
+      
       await storage.deleteProduct(productId);
-      res.sendStatus(204);
+      console.log(`Successfully processed delete for product ID: ${productId}`);
+      
+      // Force cache invalidation by sending the updated products list
+      const updatedProducts = await db.select().from(products);
+      res.status(200).json({ 
+        success: true, 
+        message: `Product with ID ${productId} has been processed.`,
+        products: updatedProducts
+      });
     } catch (error) {
       console.error("Error in delete product endpoint:", error);
       next(error);
