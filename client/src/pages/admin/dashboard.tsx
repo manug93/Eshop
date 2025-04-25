@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,10 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Interfaces for API responses
 interface AdminStats {
@@ -70,10 +75,27 @@ interface User {
   updatedAt: string;
 }
 
+// Interface for product form data
+interface ProductFormData {
+  id?: number;
+  title: string;
+  description: string;
+  price: number;
+  stock: number;
+  brand: string; 
+  categoryId: number | null;
+  thumbnail: string;
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Product dialog state
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -226,6 +248,58 @@ export default function AdminDashboard() {
       });
     }
   });
+  
+  // Create product mutation
+  const createProductMutation = useMutation({
+    mutationFn: async (productData: ProductFormData) => {
+      const response = await apiRequest('POST', '/api/admin/products', productData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setProductDialogOpen(false);
+      setEditingProduct(null);
+      toast({
+        title: "Product created",
+        description: "The product has been successfully created.",
+      });
+    },
+    onError: (error: any) => {
+      setFormError(error.message || "An error occurred while creating the product.");
+      toast({
+        title: "Error creating product",
+        description: error.message || "An error occurred while creating the product.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Update product mutation
+  const updateProductMutation = useMutation({
+    mutationFn: async (productData: ProductFormData) => {
+      const { id, ...data } = productData;
+      const response = await apiRequest('PATCH', `/api/admin/products/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      setProductDialogOpen(false);
+      setEditingProduct(null);
+      toast({
+        title: "Product updated",
+        description: "The product has been successfully updated.",
+      });
+    },
+    onError: (error: any) => {
+      setFormError(error.message || "An error occurred while updating the product.");
+      toast({
+        title: "Error updating product",
+        description: error.message || "An error occurred while updating the product.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Handle order status update
   const handleUpdateOrderStatus = (orderId: number, newStatus: string) => {
@@ -243,6 +317,72 @@ export default function AdminDashboard() {
   const handleRefundOrder = (orderId: number, paymentIntentId: string) => {
     if (window.confirm('Are you sure you want to refund this order? This action cannot be undone.')) {
       refundOrderMutation.mutate({ orderId, paymentIntentId });
+    }
+  };
+  
+  // Handle opening the product dialog for creating a new product
+  const handleAddProduct = () => {
+    setEditingProduct({
+      title: "",
+      description: "",
+      price: 0,
+      stock: 0,
+      brand: "",
+      categoryId: null,
+      thumbnail: ""
+    });
+    setFormError(null);
+    setProductDialogOpen(true);
+  };
+  
+  // Handle opening the product dialog for editing an existing product
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct({
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      brand: product.brand,
+      categoryId: product.categoryId,
+      thumbnail: product.thumbnail
+    });
+    setFormError(null);
+    setProductDialogOpen(true);
+  };
+  
+  // Handle form submission for creating or updating a product
+  const handleSubmitProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingProduct) return;
+    
+    // Validate form data
+    if (!editingProduct.title) {
+      setFormError("Title is required");
+      return;
+    }
+    
+    if (!editingProduct.description) {
+      setFormError("Description is required");
+      return;
+    }
+    
+    if (!editingProduct.price || editingProduct.price <= 0) {
+      setFormError("Price must be greater than 0");
+      return;
+    }
+    
+    if (!editingProduct.thumbnail) {
+      setFormError("Thumbnail URL is required");
+      return;
+    }
+    
+    // Submit form data
+    if (editingProduct.id) {
+      updateProductMutation.mutate(editingProduct);
+    } else {
+      createProductMutation.mutate(editingProduct);
     }
   };
 
@@ -519,7 +659,10 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <Button className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90">
+                <Button 
+                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+                  onClick={handleAddProduct}
+                >
                   Add New Product
                 </Button>
               </div>
@@ -548,6 +691,8 @@ export default function AdminDashboard() {
                             <Button 
                               variant="ghost" 
                               className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                              onClick={() => handleEditProduct(product)}
+                              disabled={updateProductMutation.isPending}
                             >
                               Edit
                             </Button>
@@ -627,6 +772,125 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Product Dialog */}
+      <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingProduct?.id ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogDescription>
+              {editingProduct?.id 
+                ? 'Edit the details of the existing product.' 
+                : 'Fill in the details of the new product you want to add.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmitProduct} className="space-y-4">
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded p-3">
+                {formError}
+              </div>
+            )}
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Product Title</Label>
+                <Input 
+                  id="title" 
+                  value={editingProduct?.title || ''} 
+                  onChange={(e) => setEditingProduct(prev => prev ? {...prev, title: e.target.value} : null)}
+                  placeholder="Product title"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="brand">Brand</Label>
+                <Input 
+                  id="brand" 
+                  value={editingProduct?.brand || ''} 
+                  onChange={(e) => setEditingProduct(prev => prev ? {...prev, brand: e.target.value} : null)}
+                  placeholder="Brand name"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                value={editingProduct?.description || ''} 
+                onChange={(e) => setEditingProduct(prev => prev ? {...prev, description: e.target.value} : null)}
+                placeholder="Product description"
+                rows={4}
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ($)</Label>
+                <Input 
+                  id="price" 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  value={editingProduct?.price || ''} 
+                  onChange={(e) => setEditingProduct(prev => 
+                    prev ? {...prev, price: parseFloat(e.target.value) || 0} : null
+                  )}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock Quantity</Label>
+                <Input 
+                  id="stock" 
+                  type="number" 
+                  min="0" 
+                  value={editingProduct?.stock || ''} 
+                  onChange={(e) => setEditingProduct(prev => 
+                    prev ? {...prev, stock: parseInt(e.target.value) || 0} : null
+                  )}
+                  placeholder="0"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="thumbnail">Thumbnail URL</Label>
+              <Input 
+                id="thumbnail" 
+                value={editingProduct?.thumbnail || ''} 
+                onChange={(e) => setEditingProduct(prev => prev ? {...prev, thumbnail: e.target.value} : null)}
+                placeholder="https://example.com/image.jpg"
+                required
+              />
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => setProductDialogOpen(false)}>Cancel</Button>
+              <Button 
+                type="submit" 
+                disabled={createProductMutation.isPending || updateProductMutation.isPending}
+              >
+                {createProductMutation.isPending || updateProductMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Product'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -187,9 +187,7 @@ export function setupAdmin(app: Express) {
       }
       
       // Initialize Stripe with the secret key
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: "2023-10-16"
-      });
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
       
       try {
         // Process the refund through Stripe
