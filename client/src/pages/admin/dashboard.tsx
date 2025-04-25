@@ -62,6 +62,7 @@ interface Product {
   categoryId: number | null;
   category?: string;
   thumbnail: string;
+  active: boolean;
 }
 
 interface User {
@@ -86,6 +87,7 @@ interface ProductFormData {
   brand: string; 
   categoryId: number | null;
   thumbnail: string;
+  active?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -150,12 +152,13 @@ export default function AdminDashboard() {
     }
   });
 
-  // Fetching products
+  // Fetching products including inactive ones (admin-only)
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: Product[], total: number }>({
     queryKey: ['/api/products'],
     queryFn: async () => {
       try {
-        const response = await apiRequest('GET', '/api/products?limit=100');
+        // Include inactive products for admin view with the includeInactive parameter
+        const response = await apiRequest('GET', '/api/products?limit=100&includeInactive=true');
         return await response.json();
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -338,6 +341,30 @@ export default function AdminDashboard() {
       toast({
         title: "Error updating product",
         description: error.message || "An error occurred while updating the product.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Reactivate product mutation
+  const reactivateProductMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await apiRequest('POST', `/api/admin/products/${productId}/reactivate`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      
+      toast({
+        title: "Product reactivated",
+        description: "The product has been successfully reactivated and is now available for purchase.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error reactivating product",
+        description: error.message || "An error occurred while reactivating the product.",
         variant: "destructive",
       });
     }
@@ -550,6 +577,11 @@ export default function AdminDashboard() {
   // Execute zero stock product deletion
   const executeZeroStockDeletion = () => {
     deleteZeroStockMutation.mutate();
+  };
+  
+  // Handle product reactivation
+  const handleReactivateProduct = (productId: number) => {
+    reactivateProductMutation.mutate(productId);
   };
 
   // Format date helper
@@ -869,17 +901,27 @@ export default function AdminDashboard() {
                       <TableHead>In Stock</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {products.map((product) => (
-                      <TableRow key={product.id}>
+                      <TableRow key={product.id} className={product.active ? "" : "opacity-70 bg-gray-50"}>
                         <TableCell>#{product.id}</TableCell>
                         <TableCell>{product.title}</TableCell>
                         <TableCell>{product.stock}</TableCell>
                         <TableCell>${product.price.toFixed(2)}</TableCell>
                         <TableCell>{product.category || 'Uncategorized'}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            product.active 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {product.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button 
@@ -892,16 +934,29 @@ export default function AdminDashboard() {
                               <Edit className="h-3.5 w-3.5" />
                               <span>Edit</span>
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center gap-1"
-                              onClick={() => handleDeleteProductConfirm(product.id)}
-                              disabled={deleteProductMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span>Delete</span>
-                            </Button>
+                            {product.active ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 flex items-center gap-1"
+                                onClick={() => handleDeleteProductConfirm(product.id)}
+                                disabled={deleteProductMutation.isPending}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Delete</span>
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200 flex items-center gap-1"
+                                onClick={() => handleReactivateProduct(product.id)}
+                                disabled={reactivateProductMutation.isPending}
+                              >
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                <span>Reactivate</span>
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
