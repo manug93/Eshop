@@ -348,7 +348,7 @@ export function setupAdmin(app: Express) {
       
       // Build the URL based on whether a category is provided
       const baseUrl = 'https://dummyjson.com/products';
-      const url = category 
+      const url = category && category !== 'all'
         ? `${baseUrl}/category/${category}?limit=${limit}`
         : `${baseUrl}?limit=${limit}`;
       

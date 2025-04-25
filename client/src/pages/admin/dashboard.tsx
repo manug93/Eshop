@@ -99,7 +99,7 @@ export default function AdminDashboard() {
   
   // Import dialog state
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importCategory, setImportCategory] = useState<string>("");
+  const [importCategory, setImportCategory] = useState<string>("all");
   const [importCount, setImportCount] = useState<number>(5);
 
   // Fetching admin statistics
@@ -1001,7 +1001,7 @@ export default function AdminDashboard() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="smartphones">Smartphones</SelectItem>
                   <SelectItem value="laptops">Laptops</SelectItem>
                   <SelectItem value="fragrances">Fragrances</SelectItem>
