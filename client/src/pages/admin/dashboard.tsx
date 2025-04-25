@@ -330,6 +330,31 @@ export default function AdminDashboard() {
   
 
   
+  // Delete all zero stock products mutation
+  const deleteZeroStockMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', '/api/admin/products/zerostock');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setZeroStockConfirmOpen(false);
+      
+      toast({
+        title: "Zero stock products processed",
+        description: data.message || "Zero stock products have been processed.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error processing zero stock products",
+        description: error.message || "An error occurred while processing zero stock products.",
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Import products from DummyJSON API
   const importProductsMutation = useMutation({
     mutationFn: async ({ 
@@ -469,6 +494,24 @@ export default function AdminDashboard() {
       skip: importSkip,
       checkDuplicates: importCheckDuplicates
     });
+  };
+  
+  // Handle deletion of all zero stock products
+  const handleDeleteZeroStockProducts = () => {
+    // Count zero stock products
+    const zeroStockCount = products.filter(product => product.stock === 0).length;
+    
+    if (zeroStockCount === 0) {
+      toast({
+        title: "No zero stock products",
+        description: "There are no products with zero stock to remove.",
+      });
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to remove ${zeroStockCount} products with zero stock? This action cannot be undone.`)) {
+      deleteZeroStockMutation.mutate();
+    }
   };
 
   // Format date helper
