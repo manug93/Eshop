@@ -416,6 +416,7 @@ export default function AdminDashboard() {
 
   // Handle product deletion confirmation dialog
   const handleDeleteProductConfirm = (productId: number) => {
+    console.log("Opening delete confirmation dialog for product ID:", productId);
     setProductToDelete(productId);
     setDeleteConfirmOpen(true);
   };
@@ -423,9 +424,12 @@ export default function AdminDashboard() {
   // Execute actual product deletion
   const executeProductDeletion = () => {
     if (productToDelete) {
+      console.log("Executing product deletion for ID:", productToDelete);
       deleteProductMutation.mutate(productToDelete);
       setDeleteConfirmOpen(false);
       setProductToDelete(null);
+    } else {
+      console.error("Product ID is not set for deletion");
     }
   };
   
