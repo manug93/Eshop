@@ -132,6 +132,18 @@ export function setupAdmin(app: Express) {
       next(error);
     }
   });
+  
+  // Delete product by ID
+  app.delete("/api/admin/products/:id", isAdmin, async (req, res, next) => {
+    try {
+      const productId = parseInt(req.params.id);
+      await storage.deleteProduct(productId);
+      res.sendStatus(204);
+    } catch (error) {
+      console.error("Error in delete product endpoint:", error);
+      next(error);
+    }
+  });
 
   // Admin category management
   app.post("/api/admin/categories", isAdmin, async (req, res, next) => {

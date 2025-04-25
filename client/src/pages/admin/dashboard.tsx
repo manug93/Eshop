@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Loader2, X } from "lucide-react";
+import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -103,6 +103,9 @@ export default function AdminDashboard() {
   const [importCount, setImportCount] = useState<number>(5);
   const [importSkip, setImportSkip] = useState<number>(0);
   const [importCheckDuplicates, setImportCheckDuplicates] = useState<boolean>(true);
+  
+  // Zero stock deletion state
+  const [zeroStockConfirmOpen, setZeroStockConfirmOpen] = useState(false);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -740,11 +743,12 @@ export default function AdminDashboard() {
               <CardDescription>View and manage your product inventory</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex gap-2">
+              <div className="mb-4 flex flex-wrap gap-2">
                 <Button 
                   className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
                   onClick={handleAddProduct}
                 >
+                  <PlusCircle className="mr-2 h-4 w-4" />
                   Add New Product
                 </Button>
                 <Button 
@@ -752,7 +756,26 @@ export default function AdminDashboard() {
                   className="px-4 py-2 rounded"
                   onClick={() => setImportDialogOpen(true)}
                 >
+                  <Download className="mr-2 h-4 w-4" />
                   Import from DummyJSON
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="px-4 py-2 rounded text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={handleDeleteZeroStockProducts}
+                  disabled={deleteZeroStockMutation.isPending}
+                >
+                  {deleteZeroStockMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove Zero Stock Products
+                    </>
+                  )}
                 </Button>
               </div>
               {products && products.length > 0 ? (
