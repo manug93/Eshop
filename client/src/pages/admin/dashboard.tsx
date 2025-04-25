@@ -19,6 +19,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,6 +111,10 @@ export default function AdminDashboard() {
   // Product deletion state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  
+  // Order refund state
+  const [refundConfirmOpen, setRefundConfirmOpen] = useState(false);
+  const [orderToRefund, setOrderToRefund] = useState<{orderId: number; paymentIntentId: string} | null>(null);
 
   // Fetching admin statistics
   const { data: adminStats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -409,10 +414,18 @@ export default function AdminDashboard() {
     updateOrderStatusMutation.mutate({ orderId, status: newStatus });
   };
 
-  // Handle product deletion
-  const handleDeleteProduct = (productId: number) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProductMutation.mutate(productId);
+  // Handle product deletion confirmation dialog
+  const handleDeleteProductConfirm = (productId: number) => {
+    setProductToDelete(productId);
+    setDeleteConfirmOpen(true);
+  };
+  
+  // Execute actual product deletion
+  const executeProductDeletion = () => {
+    if (productToDelete) {
+      deleteProductMutation.mutate(productToDelete);
+      setDeleteConfirmOpen(false);
+      setProductToDelete(null);
     }
   };
   
@@ -500,7 +513,7 @@ export default function AdminDashboard() {
     });
   };
   
-  // Handle deletion of all zero stock products
+  // Open confirmation dialog to delete zero stock products
   const handleDeleteZeroStockProducts = () => {
     // Count zero stock products
     const zeroStockCount = products.filter(product => product.stock === 0).length;
@@ -513,9 +526,12 @@ export default function AdminDashboard() {
       return;
     }
     
-    if (window.confirm(`Are you sure you want to remove ${zeroStockCount} products with zero stock? This action cannot be undone.`)) {
-      deleteZeroStockMutation.mutate();
-    }
+    setZeroStockConfirmOpen(true);
+  };
+  
+  // Execute zero stock product deletion
+  const executeZeroStockDeletion = () => {
+    deleteZeroStockMutation.mutate();
   };
 
   // Format date helper
@@ -858,7 +874,7 @@ export default function AdminDashboard() {
                             <Button 
                               variant="ghost" 
                               className="text-red-600 hover:text-red-800 p-1 h-auto"
-                              onClick={() => handleDeleteProduct(product.id)}
+                              onClick={() => handleDeleteProductConfirm(product.id)}
                               disabled={deleteProductMutation.isPending}
                             >
                               Delete
@@ -1179,6 +1195,64 @@ export default function AdminDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Delete Product Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product
+              and remove all related data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeProductDeletion}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {deleteProductMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Product'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Zero Stock Products Confirmation Dialog */}
+      <AlertDialog open={zeroStockConfirmOpen} onOpenChange={setZeroStockConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove All Zero Stock Products?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete all products
+              with zero stock from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeZeroStockDeletion}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {deleteZeroStockMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Delete Zero Stock Products'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
