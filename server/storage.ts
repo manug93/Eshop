@@ -108,6 +108,13 @@ export interface IStorage {
   getTranslations(entityType: string, entityId: number, language: string): Promise<Translation[]>;
   createTranslation(translation: InsertTranslation): Promise<Translation>;
   
+  // Category mapping methods
+  getCategoryMappings(): Promise<CategoryMapping[]>;
+  getCategoryMappingByExternalCategory(externalCategory: string): Promise<CategoryMapping | undefined>;
+  createCategoryMapping(mapping: InsertCategoryMapping): Promise<CategoryMapping>;
+  updateCategoryMapping(externalCategory: string, internalCategoryId: number): Promise<CategoryMapping | undefined>;
+  saveCategoryMappings(mappings: InsertCategoryMapping[]): Promise<CategoryMapping[]>;
+  
   // Session store
   sessionStore: session.Store;
 }

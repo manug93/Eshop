@@ -170,6 +170,15 @@ export const translations = pgTable("translations", {
   value: text("value").notNull(),
 });
 
+// Define category mappings table for the import process
+export const categoryMappings = pgTable("category_mappings", {
+  id: serial("id").primaryKey(),
+  externalCategory: text("external_category").notNull().unique(),
+  internalCategoryId: integer("internal_category_id").notNull().references(() => categories.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
@@ -329,6 +338,12 @@ export const insertTranslationSchema = createInsertSchema(translations).omit({
   id: true,
 });
 
+export const insertCategoryMappingSchema = createInsertSchema(categoryMappings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -365,3 +380,6 @@ export type Translation = typeof translations.$inferSelect;
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+export type InsertCategoryMapping = z.infer<typeof insertCategoryMappingSchema>;
+export type CategoryMapping = typeof categoryMappings.$inferSelect;
