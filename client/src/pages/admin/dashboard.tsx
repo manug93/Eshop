@@ -411,7 +411,7 @@ export default function AdminDashboard() {
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Stripe Reference</TableHead>
+                      <TableHead>Payment Intent ID</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -433,9 +433,9 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell className="text-right">${order.total?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
-                          {order.stripeRefNumber ? (
-                            <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-                              {order.stripeRefNumber}
+                          {order.paymentIntentId ? (
+                            <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded" title={order.paymentIntentId}>
+                              {order.paymentIntentId.substring(0, 14)}...
                             </span>
                           ) : (
                             <span className="text-xs text-gray-400">N/A</span>
