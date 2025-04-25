@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Interfaces for API responses
 interface AdminStats {
@@ -1155,8 +1156,8 @@ export default function AdminDashboard() {
                 <Checkbox 
                   id="active" 
                   checked={editingProduct?.active !== false}
-                  onCheckedChange={(checked) => 
-                    setEditingProduct(prev => prev ? {...prev, active: !!checked} : null)
+                  onCheckedChange={(checked: boolean) => 
+                    setEditingProduct(prev => prev ? {...prev, active: checked} : null)
                   }
                 />
                 <label
