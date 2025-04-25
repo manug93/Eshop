@@ -352,9 +352,15 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       setImportDialogOpen(false);
+      
+      let description = `${data.count} products have been successfully imported.`;
+      if (data.skipped && data.skipped > 0) {
+        description += ` (${data.skipped} duplicate products were skipped)`;
+      }
+      
       toast({
         title: "Products imported",
-        description: `${data.count} products have been successfully imported.`,
+        description,
       });
     },
     onError: (error: any) => {

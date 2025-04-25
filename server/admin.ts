@@ -384,9 +384,25 @@ export function setupAdmin(app: Express) {
       
       // Process each product and add to database
       const importedProducts = [];
+      const skippedDuplicates = [];
       
       for (const product of data.products) {
         try {
+          // Check for duplicates if requested
+          if (checkDuplicates) {
+            // Search for existing product with the same title
+            const existingProducts = await db
+              .select()
+              .from(products)
+              .where(eq(products.title, product.title));
+            
+            if (existingProducts.length > 0) {
+              console.log(`Skipping duplicate product: ${product.title}`);
+              skippedDuplicates.push(product.title);
+              continue; // Skip this product and continue with the next one
+            }
+          }
+          
           // Map DummyJSON product to our schema
           const productData = {
             title: product.title,
@@ -417,7 +433,9 @@ export function setupAdmin(app: Express) {
       res.status(200).json({
         success: true,
         count: importedProducts.length,
-        products: importedProducts
+        products: importedProducts,
+        skipped: skippedDuplicates.length,
+        skippedProducts: skippedDuplicates
       });
     } catch (error) {
       console.error("Error importing products:", error);
