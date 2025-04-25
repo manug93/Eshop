@@ -159,6 +159,29 @@ export default function AdminDashboard() {
       });
     }
   });
+  
+  // Refund order mutation
+  const refundOrderMutation = useMutation({
+    mutationFn: async ({ orderId, paymentIntentId }: { orderId: number; paymentIntentId: string }) => {
+      const response = await apiRequest('POST', `/api/admin/orders/${orderId}/refund`, { paymentIntentId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Order refunded",
+        description: "The order has been successfully refunded.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error refunding order",
+        description: error.message || "An error occurred while processing the refund.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
@@ -213,6 +236,13 @@ export default function AdminDashboard() {
   const handleDeleteProduct = (productId: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       deleteProductMutation.mutate(productId);
+    }
+  };
+  
+  // Handle order refund
+  const handleRefundOrder = (orderId: number, paymentIntentId: string) => {
+    if (window.confirm('Are you sure you want to refund this order? This action cannot be undone.')) {
+      refundOrderMutation.mutate({ orderId, paymentIntentId });
     }
   };
 
@@ -447,14 +477,26 @@ export default function AdminDashboard() {
                               className="text-sm border border-gray-300 rounded px-2 py-1"
                               value={order.status}
                               onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                              disabled={updateOrderStatusMutation.isPending}
+                              disabled={updateOrderStatusMutation.isPending || order.status === 'refunded'}
                             >
                               <option value="pending">Pending</option>
                               <option value="processing">Processing</option>
                               <option value="shipped">Shipped</option>
                               <option value="completed">Completed</option>
                               <option value="cancelled">Cancelled</option>
+                              <option value="refunded">Refunded</option>
                             </select>
+                            {order.status === 'completed' && order.paymentIntentId && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"
+                                onClick={() => handleRefundOrder(order.id, order.paymentIntentId || '')}
+                                disabled={refundOrderMutation.isPending}
+                              >
+                                Refund
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

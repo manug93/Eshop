@@ -11,6 +11,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
+import Stripe from "stripe";
 
 // Admin middleware to check if the user is an admin
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
@@ -157,6 +158,67 @@ export function setupAdmin(app: Express) {
       
       res.json(order);
     } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Process refund for an order
+  app.post("/api/admin/orders/:id/refund", isAdmin, async (req, res, next) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment intent ID is required" });
+      }
+      
+      // Get the order
+      const order = await storage.getOrderById(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      // Check if the Stripe API is available
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(503).json({
+          message: "Stripe payment processing is unavailable. Please configure STRIPE_SECRET_KEY."
+        });
+      }
+      
+      // Initialize Stripe with the secret key
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16"
+      });
+      
+      try {
+        // Process the refund through Stripe
+        const refund = await stripe.refunds.create({
+          payment_intent: paymentIntentId,
+          reason: 'requested_by_customer'
+        });
+        
+        // Update the order status to refunded
+        const updatedOrder = await storage.updateOrderStatus(orderId, 'refunded');
+        
+        res.json({ 
+          success: true, 
+          order: updatedOrder,
+          refund: {
+            id: refund.id,
+            amount: refund.amount / 100, // Convert from cents to dollars
+            status: refund.status
+          }
+        });
+      } catch (stripeError: any) {
+        console.error("Stripe refund error:", stripeError);
+        return res.status(400).json({ 
+          message: "Error processing refund", 
+          error: stripeError.message 
+        });
+      }
+    } catch (error) {
+      console.error("Server refund error:", error);
       next(error);
     }
   });
