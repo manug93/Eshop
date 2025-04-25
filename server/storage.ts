@@ -57,7 +57,7 @@ export interface IStorage {
   searchProducts(query: string): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, productData: Partial<InsertProduct>): Promise<Product | undefined>;
-  deleteProduct(id: number): Promise<boolean>;
+  deleteProduct(id: number): Promise<{ success: boolean; message: string; fullDelete: boolean }>;
   
   // Category methods
   getCategories(): Promise<Category[]>;
@@ -235,7 +235,7 @@ export class DatabaseStorage implements IStorage {
     return updatedProduct;
   }
 
-  async deleteProduct(id: number): Promise<boolean> {
+  async deleteProduct(id: number): Promise<{ success: boolean; message: string; fullDelete: boolean }> {
     try {
       console.log(`[Server] Starting deletion process for product ID: ${id}`);
       
@@ -262,7 +262,11 @@ export class DatabaseStorage implements IStorage {
           .where(eq(products.id, id));
         
         console.log(`[Server] Product ID ${id} marked as inactive`);
-        return true;
+        return {
+          success: true, 
+          message: `Product ${id} is used in ${orderItemsWithProduct.length} orders and cannot be fully deleted. It has been marked as out of stock instead.`,
+          fullDelete: false
+        };
       }
       
       // If not referenced, we can safely delete it
@@ -272,7 +276,11 @@ export class DatabaseStorage implements IStorage {
         .where(eq(products.id, id));
       
       console.log(`[Server] Product ID ${id} successfully deleted`);  
-      return true; // If no error was thrown, deletion was successful
+      return {
+        success: true,
+        message: `Product ${id} has been successfully deleted.`,
+        fullDelete: true
+      };
     } catch (error) {
       console.error(`[Server] Error deleting product ID ${id}:`, error);
       throw error;

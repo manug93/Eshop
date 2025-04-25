@@ -151,19 +151,21 @@ export function setupAdmin(app: Express) {
       }
       
       try {
-        await storage.deleteProduct(productId);
-        console.log(`[Admin API] Successfully processed delete for product ID: ${productId}`);
+        const result = await storage.deleteProduct(productId);
+        console.log(`[Admin API] Delete operation result for product ID ${productId}:`, result);
         
         // Force cache invalidation by sending the updated products list
         const updatedProducts = await db.select().from(products);
-        console.log(`[Admin API] Returning ${updatedProducts.length} products after deletion`);
+        console.log(`[Admin API] Returning ${updatedProducts.length} products after deletion operation`);
         
+        // Return appropriate message based on whether it was a full delete or just marked as inactive
         return res.status(200).json({ 
           success: true, 
-          message: `Product with ID ${productId} has been processed.`,
+          message: result.message,
+          fullDelete: result.fullDelete,
           products: updatedProducts
         });
-      } catch (deleteError) {
+      } catch (deleteError: any) {
         console.error(`[Admin API] Error while deleting product ID ${productId}:`, deleteError);
         return res.status(500).json({ 
           success: false, 

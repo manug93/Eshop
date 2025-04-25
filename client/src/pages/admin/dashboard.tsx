@@ -245,14 +245,19 @@ export default function AdminDashboard() {
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: number) => {
       console.log("Delete mutation called with product ID:", productId);
-      await apiRequest('DELETE', `/api/admin/products/${productId}`);
+      const response = await apiRequest('DELETE', `/api/admin/products/${productId}`);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      
+      // Display appropriate toast based on whether the product was fully deleted or just marked inactive
       toast({
-        title: "Product deleted",
-        description: "The product has been successfully deleted.",
+        title: data.fullDelete ? "Product deleted" : "Product marked as inactive",
+        description: data.message,
+        // Only 'default' and 'destructive' are allowed variants
+        variant: data.fullDelete ? "default" : "destructive",
       });
     },
     onError: (error: any) => {
