@@ -3,14 +3,16 @@ import { storage } from "./storage";
 import { 
   InsertProduct, 
   InsertCategory, 
-  InsertPromotion, 
+  InsertPromotion,
+  InsertCategoryMapping,
   users, 
   promotions,
   products,
   orders,
   orderItems,
   cartItems,
-  wishlists
+  wishlists,
+  categoryMappings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
@@ -248,6 +250,54 @@ export function setupAdmin(app: Express) {
       const category = await storage.createCategory(categoryData);
       res.status(201).json(category);
     } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Admin category mappings management
+  app.post("/api/admin/category-mappings", isAdmin, async (req, res, next) => {
+    try {
+      console.log('[Admin API] Category mappings received:', req.body.mappings);
+      
+      const { mappings } = req.body;
+      
+      if (!mappings || !Array.isArray(mappings)) {
+        return res.status(400).json({ message: "Invalid mappings data format" });
+      }
+      
+      // Validate each mapping object
+      for (const mapping of mappings) {
+        if (typeof mapping.externalCategory !== 'string' || 
+            typeof mapping.internalCategoryId !== 'number') {
+          return res.status(400).json({ 
+            message: "Invalid mapping format. Each mapping must have externalCategory (string) and internalCategoryId (number)."
+          });
+        }
+      }
+      
+      // Create/update the mappings in the database
+      const savedMappings = await Promise.all(
+        mappings.map(async (mapping) => {
+          // Check if this mapping already exists in the database
+          const existingMapping = await storage.getCategoryMappingByExternalCategory(mapping.externalCategory);
+          
+          if (existingMapping) {
+            // Update the existing mapping
+            return storage.updateCategoryMapping(mapping.externalCategory, mapping.internalCategoryId);
+          } else {
+            // Create a new mapping
+            return storage.createCategoryMapping(mapping);
+          }
+        })
+      );
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Category mappings saved successfully",
+        mappings: savedMappings
+      });
+    } catch (error) {
+      console.error('[Admin API] Error saving category mappings:', error);
       next(error);
     }
   });

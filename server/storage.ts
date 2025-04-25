@@ -10,6 +10,7 @@ import {
   promotions, 
   translations,
   addresses,
+  categoryMappings,
   type User, 
   type InsertUser,
   type Product,
@@ -31,7 +32,9 @@ import {
   type Translation,
   type InsertTranslation,
   type Address,
-  type InsertAddress
+  type InsertAddress,
+  type CategoryMapping,
+  type InsertCategoryMapping
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, or, like } from "drizzle-orm";
@@ -744,6 +747,62 @@ export class DatabaseStorage implements IStorage {
       .values(translationData)
       .returning();
     return translation;
+  }
+
+  // Category mapping methods
+  async getCategoryMappings(): Promise<CategoryMapping[]> {
+    return db.select().from(categoryMappings);
+  }
+  
+  async getCategoryMappingByExternalCategory(externalCategory: string): Promise<CategoryMapping | undefined> {
+    const [mapping] = await db
+      .select()
+      .from(categoryMappings)
+      .where(eq(categoryMappings.externalCategory, externalCategory));
+    return mapping;
+  }
+  
+  async createCategoryMapping(mapping: InsertCategoryMapping): Promise<CategoryMapping> {
+    const [newMapping] = await db
+      .insert(categoryMappings)
+      .values(mapping)
+      .returning();
+    return newMapping;
+  }
+  
+  async updateCategoryMapping(externalCategory: string, internalCategoryId: number): Promise<CategoryMapping | undefined> {
+    const [updatedMapping] = await db
+      .update(categoryMappings)
+      .set({ internalCategoryId })
+      .where(eq(categoryMappings.externalCategory, externalCategory))
+      .returning();
+    return updatedMapping;
+  }
+  
+  async saveCategoryMappings(mappings: InsertCategoryMapping[]): Promise<CategoryMapping[]> {
+    const results: CategoryMapping[] = [];
+    
+    for (const mapping of mappings) {
+      // Check if the mapping already exists
+      const existingMapping = await this.getCategoryMappingByExternalCategory(mapping.externalCategory);
+      
+      if (existingMapping) {
+        // Update the existing mapping
+        const updatedMapping = await this.updateCategoryMapping(
+          mapping.externalCategory, 
+          mapping.internalCategoryId
+        );
+        if (updatedMapping) {
+          results.push(updatedMapping);
+        }
+      } else {
+        // Create a new mapping
+        const newMapping = await this.createCategoryMapping(mapping);
+        results.push(newMapping);
+      }
+    }
+    
+    return results;
   }
 }
 
