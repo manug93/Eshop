@@ -429,10 +429,18 @@ export default function AdminDashboard() {
     }
   };
   
-  // Handle order refund
-  const handleRefundOrder = (orderId: number, paymentIntentId: string) => {
-    if (window.confirm('Are you sure you want to refund this order? This action cannot be undone.')) {
-      refundOrderMutation.mutate({ orderId, paymentIntentId });
+  // Handle order refund confirmation dialog
+  const handleRefundOrderConfirm = (orderId: number, paymentIntentId: string) => {
+    setOrderToRefund({ orderId, paymentIntentId });
+    setRefundConfirmOpen(true);
+  };
+  
+  // Execute actual order refund
+  const executeOrderRefund = () => {
+    if (orderToRefund) {
+      refundOrderMutation.mutate(orderToRefund);
+      setRefundConfirmOpen(false);
+      setOrderToRefund(null);
     }
   };
   
@@ -779,7 +787,7 @@ export default function AdminDashboard() {
                                 variant="outline"
                                 size="sm"
                                 className="text-xs bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"
-                                onClick={() => handleRefundOrder(order.id, order.paymentIntentId || '')}
+                                onClick={() => handleRefundOrderConfirm(order.id, order.paymentIntentId || '')}
                                 disabled={refundOrderMutation.isPending}
                               >
                                 Refund
@@ -1248,6 +1256,35 @@ export default function AdminDashboard() {
                 </>
               ) : (
                 'Delete Zero Stock Products'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Order Refund Confirmation Dialog */}
+      <AlertDialog open={refundConfirmOpen} onOpenChange={setRefundConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Refund This Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will process a full refund to the customer 
+              for this order. The refund will be processed through Stripe.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeOrderRefund}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {refundOrderMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing Refund...
+                </>
+              ) : (
+                'Process Refund'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
