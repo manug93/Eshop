@@ -530,6 +530,26 @@ export default function AdminDashboard() {
   });
   
   // Save category mappings mutation
+  const saveCategoryMappingsMutation = useMutation({
+    mutationFn: async (mappings: CategoryMapping[]) => {
+      const response = await apiRequest('POST', '/api/admin/category-mappings', { mappings });
+      return response.json();
+    },
+    onSuccess: () => {
+      setCategoryMappingDialogOpen(false);
+      toast({
+        title: "Category mappings saved",
+        description: "The category mappings have been successfully saved.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error saving category mappings",
+        description: error.message || "An error occurred while saving category mappings.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Import products from DummyJSON API with category mappings
   const importProductsMutation = useMutation({
