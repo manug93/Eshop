@@ -714,16 +714,16 @@ export function setupAdmin(app: Express) {
   // Get monthly sales data for the past 12 months
   app.get("/api/admin/charts/sales-by-month", isAdmin, async (req, res, next) => {
     try {
-      // PostgreSQL query to get monthly sales data
+      // PostgreSQL query to get monthly sales data - using created_at column name
       const monthlySales = await db.execute(sql`
         SELECT 
-          DATE_TRUNC('month', created_at) AS month,
+          DATE_TRUNC('month', orders.created_at) AS month,
           SUM(total) AS revenue,
           COUNT(*) AS order_count
         FROM orders
         WHERE status = 'completed'
-        AND created_at >= NOW() - INTERVAL '12 months'
-        GROUP BY DATE_TRUNC('month', created_at)
+        AND orders.created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC('month', orders.created_at)
         ORDER BY month ASC
       `);
       
