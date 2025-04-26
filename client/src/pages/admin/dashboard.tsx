@@ -1051,7 +1051,23 @@ export default function AdminDashboard() {
 
   // Save category mappings
   const handleSaveCategoryMappings = () => {
-    saveCategoryMappingsMutation.mutate(categoryMappings);
+    // Process mappings to ensure we normalize all external categories before sending to the server
+    const normalizedMappings = categoryMappings.map(mapping => {
+      // Convert object-based external categories to strings (slugs)
+      let externalCat = mapping.externalCategory;
+      
+      if (typeof externalCat === 'object' && externalCat !== null) {
+        // If it's an object, prefer to use the slug property
+        externalCat = externalCat.slug || String(externalCat);
+      }
+      
+      return {
+        ...mapping,
+        externalCategory: externalCat
+      };
+    });
+    
+    saveCategoryMappingsMutation.mutate(normalizedMappings);
   };
 
   // Format date helper
@@ -2094,9 +2110,11 @@ export default function AdminDashboard() {
                   <div key={`mapping-${index}`} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
                     <div className="col-span-2">
                       <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                        {typeof mapping.externalCategory === 'string' 
-                          ? mapping.externalCategory.replace(/-/g, ' ') 
-                          : String(mapping.externalCategory)}
+                        {typeof mapping.externalCategory === 'object' && mapping.externalCategory !== null && mapping.externalCategory.name
+                          ? mapping.externalCategory.name
+                          : typeof mapping.externalCategory === 'string'
+                            ? mapping.externalCategory.replace(/-/g, ' ')
+                            : String(mapping.externalCategory)}
                       </span>
                     </div>
                     <div className="col-span-3">

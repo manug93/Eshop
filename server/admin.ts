@@ -387,33 +387,64 @@ export function setupAdmin(app: Express) {
         return res.status(400).json({ message: "Invalid mappings data format" });
       }
       
-      // Validate each mapping object
-      for (const mapping of mappings) {
-        if (typeof mapping.externalCategory !== 'string' || 
-            typeof mapping.internalCategoryId !== 'number') {
-          return res.status(400).json({ 
-            message: "Invalid mapping format. Each mapping must have externalCategory (string) and internalCategoryId (number)."
-          });
+      // Process the mappings to normalize data formats
+      const processedMappings = mappings.map(mapping => {
+        let externalCat;
+        let externalCatName;
+        
+        // Handle externalCategory - normalize to string (slug) for database storage
+        if (typeof mapping.externalCategory === 'object' && mapping.externalCategory !== null) {
+          externalCat = mapping.externalCategory.slug || '';
+          externalCatName = mapping.externalCategory.name || externalCat;
+        } else {
+          externalCat = String(mapping.externalCategory);
+          externalCatName = externalCat
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
         }
-
+        
+        // Ensure internalCategoryId is a number
+        let internalCatId = mapping.internalCategoryId;
+        if (typeof internalCatId !== 'number') {
+          internalCatId = parseInt(String(internalCatId), 10);
+          if (isNaN(internalCatId)) {
+            throw new Error(`Invalid internalCategoryId for external category ${externalCat}`);
+          }
+        }
+        
+        return {
+          externalCategory: externalCat,
+          internalCategoryId: internalCatId,
+          _name: externalCatName // Temporary field to help with category creation
+        };
+      });
+      
+      // Process each mapping
+      for (const mapping of processedMappings) {
         // Check if the internal category exists
         const category = await storage.getCategoryById(mapping.internalCategoryId);
         if (!category) {
           // Create a new category with name and slug based on the external category
-          const categoryName = mapping.externalCategory
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+          const categoryName = mapping._name;
           
-          const newCategory = await storage.createCategory({
-            name: categoryName,
-            slug: mapping.externalCategory,
-          });
-          
-          // Update the mapping to use the new category
-          mapping.internalCategoryId = newCategory.id;
-          console.log(`[Admin API] Created new category '${categoryName}' (ID: ${newCategory.id}) for external category '${mapping.externalCategory}'`);
+          try {
+            const newCategory = await storage.createCategory({
+              name: categoryName,
+              slug: mapping.externalCategory,
+            });
+            
+            // Update the mapping to use the new category
+            mapping.internalCategoryId = newCategory.id;
+            console.log(`[Admin API] Created new category '${categoryName}' (ID: ${newCategory.id}) for external category '${mapping.externalCategory}'`);
+          } catch (err) {
+            console.error(`[Admin API] Error creating category for ${mapping.externalCategory}:`, err);
+            // Continue processing other mappings
+          }
         }
+        
+        // Remove temporary field
+        delete mapping._name;
       }
       
       // Create/update the mappings in the database
