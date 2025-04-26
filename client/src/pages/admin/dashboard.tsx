@@ -1282,11 +1282,12 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
             
-            {/* Analytics Dashboard Charts */}
-            <div className="mt-6">
+           
+          </div>
+           {/* Analytics Dashboard Charts */}
+           <div className="mt-6">
               <DashboardCharts />
             </div>
-          </div>
         </TabsContent>
         
         {/* Orders Tab */}
