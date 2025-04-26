@@ -875,6 +875,16 @@ export default function AdminDashboard() {
     setLoadingExternalCategories(true);
     
     try {
+      // First, load existing category mappings to compare and avoid duplications
+      const existingMappingsResponse = await apiRequest('GET', '/api/admin/category-mappings');
+      const existingMappings = await existingMappingsResponse.json();
+      
+      // Extract existing external categories
+      const existingExternalCategories = existingMappings.map(
+        (mapping: CategoryMapping) => mapping.externalCategory
+      );
+      
+      // Fetch external categories from DummyJSON API
       const response = await apiRequest('GET', '/api/admin/import-external-categories');
       
       if (!response.ok) {
@@ -883,18 +893,32 @@ export default function AdminDashboard() {
       
       const externalCategories: string[] = await response.json();
       
-      // Prepare mappings with external categories and default internal category
+      // Default category ID to use for new mappings
       const defaultCategoryId = categories && categories.length > 0 ? categories[0].id : 1;
-      const newMappings = externalCategories.map(cat => ({
-        externalCategory: cat,
-        internalCategoryId: defaultCategoryId
-      }));
       
-      setCategoryMappings(newMappings);
+      // Create new mappings array, merging existing and new ones
+      let mergedMappings: CategoryMapping[] = [...existingMappings];
+      
+      // Add only categories that don't already exist in mappings
+      let newCategoriesCount = 0;
+      
+      externalCategories.forEach(cat => {
+        if (!existingExternalCategories.includes(cat)) {
+          mergedMappings.push({
+            externalCategory: cat,
+            internalCategoryId: defaultCategoryId
+          });
+          newCategoriesCount++;
+        }
+      });
+      
+      setCategoryMappings(mergedMappings);
       
       toast({
-        title: "Categories imported",
-        description: `Successfully imported ${externalCategories.length} categories from DummyJSON.`,
+        title: newCategoriesCount > 0 ? "Categories imported" : "No new categories found",
+        description: newCategoriesCount > 0 
+          ? `Successfully imported ${newCategoriesCount} new categories from DummyJSON.`
+          : "All DummyJSON categories are already mapped. You can modify existing mappings.",
       });
       
       // Open the category mapping dialog to let user choose mappings
