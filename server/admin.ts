@@ -688,6 +688,221 @@ export function setupAdmin(app: Express) {
     }
   });
   
+  // Get top 10 orders by total value
+  app.get("/api/admin/charts/top-orders", isAdmin, async (req, res, next) => {
+    try {
+      const topOrders = await db
+        .select({
+          id: orders.id,
+          total: orders.total,
+          date: orders.createdAt,
+          username: users.username
+        })
+        .from(orders)
+        .leftJoin(users, eq(orders.userId, users.id))
+        .where(eq(orders.status, 'completed'))
+        .orderBy(desc(orders.total))
+        .limit(10);
+      
+      res.json(topOrders);
+    } catch (error) {
+      console.error("Error fetching top orders:", error);
+      next(error);
+    }
+  });
+  
+  // Get monthly sales data for the past 12 months
+  app.get("/api/admin/charts/sales-by-month", isAdmin, async (req, res, next) => {
+    try {
+      // PostgreSQL query to get monthly sales data
+      const monthlySales = await db.execute(sql`
+        SELECT 
+          DATE_TRUNC('month', "createdAt") AS month,
+          SUM(total) AS revenue,
+          COUNT(*) AS order_count
+        FROM orders
+        WHERE status = 'completed'
+        AND "createdAt" >= NOW() - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC('month', "createdAt")
+        ORDER BY month ASC
+      `);
+      
+      // Format the result
+      const formattedSales = (monthlySales as any[]).map(row => ({
+        month: new Date(row.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        revenue: Number(row.revenue) || 0,
+        orderCount: Number(row.order_count) || 0
+      }));
+      
+      res.json(formattedSales);
+    } catch (error) {
+      console.error("Error fetching monthly sales:", error);
+      next(error);
+    }
+  });
+  
+  // Get sales data by category
+  app.get("/api/admin/charts/sales-by-category", isAdmin, async (req, res, next) => {
+    try {
+      // PostgreSQL query to get sales by category
+      const categoryData = await db.execute(sql`
+        SELECT 
+          c.name AS category_name,
+          SUM(oi.quantity * oi.price) AS revenue,
+          SUM(oi.quantity) AS units_sold
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.status = 'completed'
+        GROUP BY c.name
+        ORDER BY revenue DESC
+      `);
+      
+      // Format the result and handle null categories
+      const formattedData = (categoryData as any[]).map(row => ({
+        category: row.category_name || 'Uncategorized',
+        revenue: Number(row.revenue) || 0,
+        unitsSold: Number(row.units_sold) || 0
+      }));
+      
+      res.json(formattedData);
+    } catch (error) {
+      console.error("Error fetching sales by category:", error);
+      next(error);
+    }
+  });
+  
+  // Get top 10 buyers
+  app.get("/api/admin/charts/top-buyers", isAdmin, async (req, res, next) => {
+    try {
+      const topBuyers = await db.execute(sql`
+        SELECT 
+          u.username,
+          u.id AS user_id,
+          COUNT(o.id) AS order_count,
+          SUM(o.total) AS total_spent
+        FROM users u
+        JOIN orders o ON u.id = o.user_id
+        WHERE o.status = 'completed'
+        GROUP BY u.id, u.username
+        ORDER BY total_spent DESC
+        LIMIT 10
+      `);
+      
+      const formattedData = (topBuyers as any[]).map(row => ({
+        username: row.username,
+        userId: row.user_id,
+        orderCount: Number(row.order_count) || 0,
+        totalSpent: Number(row.total_spent) || 0
+      }));
+      
+      res.json(formattedData);
+    } catch (error) {
+      console.error("Error fetching top buyers:", error);
+      next(error);
+    }
+  });
+  
+  // Get top 10 products by sales
+  app.get("/api/admin/charts/top-products", isAdmin, async (req, res, next) => {
+    try {
+      const topProducts = await db.execute(sql`
+        SELECT 
+          p.id AS product_id,
+          p.title AS product_name,
+          SUM(oi.quantity) AS units_sold,
+          SUM(oi.quantity * oi.price) AS revenue
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.status = 'completed'
+        GROUP BY p.id, p.title
+        ORDER BY units_sold DESC
+        LIMIT 10
+      `);
+      
+      const formattedData = (topProducts as any[]).map(row => ({
+        productId: row.product_id,
+        productName: row.product_name,
+        unitsSold: Number(row.units_sold) || 0,
+        revenue: Number(row.revenue) || 0
+      }));
+      
+      res.json(formattedData);
+    } catch (error) {
+      console.error("Error fetching top products:", error);
+      next(error);
+    }
+  });
+  
+  // Get 10 most expensive products and their sales count
+  app.get("/api/admin/charts/expensive-products", isAdmin, async (req, res, next) => {
+    try {
+      const expensiveProducts = await db.execute(sql`
+        SELECT 
+          p.id AS product_id,
+          p.title AS product_name,
+          p.price,
+          COALESCE(SUM(oi.quantity), 0) AS units_sold
+        FROM products p
+        LEFT JOIN order_items oi ON p.id = oi.product_id
+        LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'completed'
+        WHERE p.active = true
+        GROUP BY p.id, p.title, p.price
+        ORDER BY p.price DESC
+        LIMIT 10
+      `);
+      
+      const formattedData = expensiveProducts.map(row => ({
+        productId: row.product_id,
+        productName: row.product_name,
+        price: Number(row.price) || 0,
+        unitsSold: Number(row.units_sold) || 0
+      }));
+      
+      res.json(formattedData);
+    } catch (error) {
+      console.error("Error fetching expensive products:", error);
+      next(error);
+    }
+  });
+  
+  // Get most viewed products (simulated since we don't track views yet)
+  app.get("/api/admin/charts/most-viewed", isAdmin, async (req, res, next) => {
+    try {
+      // Since we don't have actual view tracking, we'll use a combination of 
+      // order frequency and rating as a proxy for popularity/views
+      const popularProducts = await db.execute(sql`
+        SELECT 
+          p.id AS product_id,
+          p.title AS product_name,
+          p.rating,
+          COUNT(DISTINCT oi.order_id) AS order_frequency
+        FROM products p
+        LEFT JOIN order_items oi ON p.id = oi.product_id
+        WHERE p.active = true
+        GROUP BY p.id, p.title, p.rating
+        ORDER BY (p.rating * COUNT(DISTINCT oi.order_id)) DESC
+        LIMIT 10
+      `);
+      
+      const formattedData = popularProducts.map(row => ({
+        productId: row.product_id,
+        productName: row.product_name,
+        rating: Number(row.rating) || 0,
+        orderFrequency: Number(row.order_frequency) || 0,
+        // Estimated views based on order frequency and rating
+        estimatedViews: Math.round((Number(row.order_frequency) || 0) * (Number(row.rating) || 0) * 10)
+      }));
+      
+      res.json(formattedData);
+    } catch (error) {
+      console.error("Error fetching most viewed products:", error);
+      next(error);
+    }
+  });
+  
   // Import products from DummyJSON API
   app.post("/api/admin/products/import", isAdmin, async (req, res, next) => {
     try {

@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X, Edit, RefreshCw, Layers } from "lucide-react";
+import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X, Edit, RefreshCw, Layers, BarChart } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -25,6 +25,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+
+// Importing Dashboard Charts component
+import DashboardCharts from "@/components/admin/DashboardCharts";
 
 // Interfaces for API responses
 interface AdminStats {
@@ -1278,6 +1281,11 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+            
+            {/* Analytics Dashboard Charts */}
+            <div className="mt-6">
+              <DashboardCharts />
+            </div>
           </div>
         </TabsContent>
         
