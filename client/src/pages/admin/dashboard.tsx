@@ -149,6 +149,7 @@ export default function AdminDashboard() {
   const [deleteCategoryConfirmOpen, setDeleteCategoryConfirmOpen] = useState(false);
   const [categoryMappingDialogOpen, setCategoryMappingDialogOpen] = useState(false);
   const [categoryMappings, setCategoryMappings] = useState<CategoryMapping[]>([]);
+  const [loadingCategoryMappings, setLoadingCategoryMappings] = useState(false);
   
 
 
