@@ -17,6 +17,7 @@ import {
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
 import Stripe from "stripe";
+import fetch from "node-fetch";
 
 // Admin middleware to check if the user is an admin
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
@@ -313,6 +314,34 @@ export function setupAdmin(app: Express) {
     } catch (error) {
       console.error('[Admin API] Error deleting category:', error);
       next(error);
+    }
+  });
+  
+  // Helper function to fetch external categories from DummyJSON
+  async function fetchExternalCategories(): Promise<string[]> {
+    try {
+      const response = await fetch('https://dummyjson.com/products/categories');
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching categories: ${response.status} ${response.statusText}`);
+      }
+      
+      const categories = await response.json();
+      return categories;
+    } catch (error) {
+      console.error('Error fetching external categories:', error);
+      throw error;
+    }
+  }
+
+  // Import external categories from DummyJSON
+  app.get("/api/admin/import-external-categories", isAdmin, async (req, res, next) => {
+    try {
+      const externalCategories = await fetchExternalCategories();
+      res.json(externalCategories);
+    } catch (error) {
+      console.error('Error importing external categories:', error);
+      res.status(500).json({ message: 'Failed to import external categories', error: String(error) });
     }
   });
   
