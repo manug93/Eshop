@@ -854,7 +854,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = expensiveProducts.map(row => ({
+      const formattedData = (expensiveProducts as any[]).map(row => ({
         productId: row.product_id,
         productName: row.product_name,
         price: Number(row.price) || 0,
@@ -887,7 +887,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = popularProducts.map(row => ({
+      const formattedData = (popularProducts as any[]).map(row => ({
         productId: row.product_id,
         productName: row.product_name,
         rating: Number(row.rating) || 0,
