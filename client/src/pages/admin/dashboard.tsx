@@ -1977,15 +1977,19 @@ export default function AdminDashboard() {
                 </div>
                 
                 {categoryMappings.map((mapping, index) => (
-                  <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
+                  <div key={`mapping-${index}`} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
                     <div className="col-span-2">
                       <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                        {mapping.externalCategory.replace(/-/g, ' ')}
+                        {typeof mapping.externalCategory === 'string' 
+                          ? mapping.externalCategory.replace(/-/g, ' ') 
+                          : String(mapping.externalCategory)}
                       </span>
                     </div>
                     <div className="col-span-3">
                       <Select 
-                        value={mapping.internalCategoryId.toString()}
+                        value={typeof mapping.internalCategoryId === 'number' 
+                          ? mapping.internalCategoryId.toString() 
+                          : String(mapping.internalCategoryId)}
                         onValueChange={(value) => {
                           const newMappings = [...categoryMappings];
                           newMappings[index] = {
