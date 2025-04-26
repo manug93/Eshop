@@ -47,7 +47,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res, next) => {
     try {
       const { limit = '20', offset = '0', category, search, sort, includeInactive = 'false' } = req.query;
-      let query = db.select().from(products);
+      
+      // Query builder for products with category names
+      let query = db.select({
+        product: products,
+        categoryName: categories.name
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id));
       
       // Only include active products by default, unless explicitly requested
       // Users should only see active products, admins can request inactive ones
@@ -108,7 +115,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(parseInt(limit as string))
         .offset(parseInt(offset as string));
       
-      const results = await query;
+      const queryResults = await query;
+      
+      // Transform the results to include the category name as a property
+      const results = queryResults.map(row => {
+        return {
+          ...row.product,
+          category: row.categoryName || 'Uncategorized'
+        };
+      });
       
       // Get the total count for pagination (respecting the active filter)
       let countQuery = db.select({ count: sql`count(${products.id})` }).from(products);
@@ -124,6 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: parseInt(offset as string)
       });
     } catch (error) {
+      console.error('Error fetching products:', error);
       next(error);
     }
   });
@@ -131,14 +147,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const [product] = await db
-        .select()
+      
+      // Get product with category name
+      const [result] = await db
+        .select({
+          product: products,
+          categoryName: categories.name
+        })
         .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(eq(products.id, id));
       
-      if (!product) {
+      if (!result || !result.product) {
         return res.status(404).json({ message: "Product not found" });
       }
+      
+      // Combine product with category name
+      const product = {
+        ...result.product,
+        category: result.categoryName || 'Uncategorized'
+      };
       
       // Allow viewing inactive products if requested by admin
       // But warn regular users if the product is inactive
@@ -157,6 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(product);
     } catch (error) {
+      console.error('Error fetching product by ID:', error);
       next(error);
     }
   });
