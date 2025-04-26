@@ -870,6 +870,30 @@ export default function AdminDashboard() {
     }
   };
   
+  // Helper to convert external category string to a readable name
+  const formatExternalCategoryName = (externalCat: string): string => {
+    if (typeof externalCat !== 'string') return String(externalCat);
+    
+    return externalCat
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+  
+  // Create a new category in the database
+  const createNewCategoryMutation = useMutation({
+    mutationFn: async (categoryData: CategoryFormData) => {
+      const response = await apiRequest('POST', '/api/admin/categories', categoryData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+    },
+    onError: (error: any) => {
+      console.error("Error creating new category:", error);
+    }
+  });
+  
   // Import categories from DummyJSON API
   const handleImportExternalCategories = async () => {
     setLoadingExternalCategories(true);
@@ -899,25 +923,76 @@ export default function AdminDashboard() {
       // Create new mappings array, merging existing and new ones
       let mergedMappings: CategoryMapping[] = [...existingMappings];
       
-      // Add only categories that don't already exist in mappings
+      // Track new categories for feedback
       let newCategoriesCount = 0;
+      let createdCategoriesCount = 0;
       
-      externalCategories.forEach(cat => {
+      // Get existing internal category names to avoid duplicates
+      const existingCategoryNames = new Set(categories?.map(cat => cat.name.toLowerCase()));
+      
+      // Create a promise array to handle category creation in parallel
+      const categoryCreationPromises = [];
+      
+      // Process each external category
+      for (const cat of externalCategories) {
         if (!existingExternalCategories.includes(cat)) {
-          mergedMappings.push({
-            externalCategory: cat,
-            internalCategoryId: defaultCategoryId
-          });
+          // Format category name from external category (e.g. "home-decoration" -> "Home Decoration")
+          const categoryName = formatExternalCategoryName(cat);
+          const slug = typeof cat === 'string' ? cat : String(cat);
+          
           newCategoriesCount++;
+          
+          // Check if we already have a similar category internally
+          if (!existingCategoryNames.has(categoryName.toLowerCase())) {
+            // Create a new category in the database since it doesn't exist
+            categoryCreationPromises.push(
+              createNewCategoryMutation.mutateAsync({
+                name: categoryName,
+                slug: slug
+              }).then(newCategory => {
+                createdCategoriesCount++;
+                
+                // Use the newly created category for mapping instead of the default
+                mergedMappings.push({
+                  externalCategory: cat,
+                  internalCategoryId: newCategory.id
+                });
+                
+                return newCategory;
+              }).catch(err => {
+                console.error(`Failed to create category ${categoryName}:`, err);
+                
+                // Fall back to default category if creation fails
+                mergedMappings.push({
+                  externalCategory: cat,
+                  internalCategoryId: defaultCategoryId
+                });
+                
+                return null;
+              })
+            );
+          } else {
+            // Use default category for now, user can change it in the mapping dialog
+            mergedMappings.push({
+              externalCategory: cat,
+              internalCategoryId: defaultCategoryId
+            });
+          }
         }
-      });
+      }
+      
+      // Wait for all category creations to complete
+      await Promise.all(categoryCreationPromises);
+      
+      // Reload categories to make sure we have the latest list
+      await queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
       
       setCategoryMappings(mergedMappings);
       
       toast({
         title: newCategoriesCount > 0 ? "Categories imported" : "No new categories found",
         description: newCategoriesCount > 0 
-          ? `Successfully imported ${newCategoriesCount} new categories from DummyJSON.`
+          ? `Successfully imported ${newCategoriesCount} new categories from DummyJSON. Created ${createdCategoriesCount} new internal categories.`
           : "All DummyJSON categories are already mapped. You can modify existing mappings.",
       });
       
