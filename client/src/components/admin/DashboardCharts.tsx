@@ -210,212 +210,221 @@ const DashboardCharts = () => {
         <p className="text-muted-foreground">Visualisez les performances de votre boutique en temps réel</p>
       </div>
       
-      {/* Top Orders Chart */}
-      <ChartCard title="Top 10 commandes par montant">
-        {loading.orders ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={topOrders}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-              layout="vertical"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                type="number"
-                label={{ value: 'Montant ($)', position: 'insideBottom', offset: -10 }}
-              />
-              <YAxis 
-                type="category"
-                dataKey="id" 
-                tickFormatter={(value) => `#${value} - ${topOrders.find(o => o.id === value)?.username}`}
-                width={150}
-              />
-              <Tooltip 
-                formatter={(value: number) => formatCurrency(value)}
-                labelFormatter={(value) => `Commande #${value} - ${topOrders.find(o => o.id === value)?.username}`}
-              />
-              <Legend />
-              <Bar dataKey="total" name="Montant" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Monthly Sales Chart */}
-      <ChartCard title="Ventes mensuelles des 12 derniers mois">
-        {loading.monthly ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart
-              data={monthlySales}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" orientation="left" label={{ value: 'Revenus ($)', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: 'Nombre de commandes', angle: 90, position: 'insideRight' }} />
-              <Tooltip formatter={(value: number, name: string) => {
-                if (name === "revenue") return formatCurrency(value);
-                return value;
-              }} />
-              <Legend />
-              <Area yAxisId="left" type="monotone" dataKey="revenue" name="Revenus" fill="#8884d8" stroke="#8884d8" />
-              <Area yAxisId="right" type="monotone" dataKey="orderCount" name="Commandes" fill="#82ca9d" stroke="#82ca9d" />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Category Sales Chart */}
-      <ChartCard title="Ventes par catégorie">
-        {loading.category ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={categorySales}
-                dataKey="revenue"
-                nameKey="category"
-                cx="50%"
-                cy="50%"
-                outerRadius={150}
-                fill="#8884d8"
-                label={(entry) => `${entry.category}: ${formatCurrency(entry.revenue)}`}
-              >
-                {categorySales.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: number) => formatCurrency(value)} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Top Buyers Chart */}
-      <ChartCard title="Top 10 acheteurs">
-        {loading.buyers ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={topBuyers}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-              layout="vertical"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" label={{ value: 'Dépenses ($)', position: 'insideBottom', offset: -10 }} />
-              <YAxis type="category" dataKey="username" width={100} />
-              <Tooltip 
-                formatter={(value: number) => formatCurrency(value)}
-                labelFormatter={(value) => `Utilisateur: ${value}`}
-              />
-              <Legend />
-              <Bar dataKey="totalSpent" name="Dépenses totales" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Top Products Chart */}
-      <ChartCard title="Top 10 produits par ventes">
-        {loading.products ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={topProducts}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-              layout="vertical"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis 
-                type="category"
-                dataKey="productName"
-                width={150}
-              />
-              <Tooltip 
-                formatter={(value: number, name: string) => {
-                  if (name === "revenue") return formatCurrency(value);
-                  return value;
-                }}
-              />
-              <Legend />
-              <Bar dataKey="unitsSold" name="Unités vendues" fill="#8884d8" />
-              <Bar dataKey="revenue" name="Revenus" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Expensive Products Chart */}
-      <ChartCard title="10 produits les plus chers">
-        {loading.expensive ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart
-              data={expensiveProducts}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="productName"
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-                height={100}
-              />
-              <YAxis yAxisId="left" orientation="left" label={{ value: 'Prix ($)', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: 'Unités vendues', angle: 90, position: 'insideRight' }} />
-              <Tooltip 
-                formatter={(value: number, name: string) => {
-                  if (name === "price") return formatCurrency(value);
-                  return value;
-                }}
-              />
-              <Legend />
-              <Line yAxisId="left" type="monotone" dataKey="price" name="Prix" stroke="#8884d8" />
-              <Line yAxisId="right" type="monotone" dataKey="unitsSold" name="Unités vendues" stroke="#82ca9d" />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
-      
-      {/* Most Viewed Products Chart */}
-      <ChartCard title="Produits les plus populaires (estimation)">
-        {loading.viewed ? (
-          <ChartLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart
-              data={viewedProducts}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="productName"
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-                height={100}
-              />
-              <YAxis yAxisId="left" orientation="left" label={{ value: 'Vues estimées', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: 'Note', angle: 90, position: 'insideRight' }} domain={[0, 5]} />
-              <Tooltip />
-              <Legend />
-              <Line yAxisId="left" type="monotone" dataKey="estimatedViews" name="Vues estimées" stroke="#ffc658" strokeWidth={2} dot={{ r: 4 }} />
-              <Line yAxisId="right" type="monotone" dataKey="rating" name="Note" stroke="#ff8042" strokeWidth={2} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
+      {/* Two-column layout for charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Column 1 */}
+        <div>
+          {/* Top Orders Chart */}
+          <ChartCard title="Top 10 commandes par montant">
+            {loading.orders ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={topOrders}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number"
+                    label={{ value: 'Montant ($)', position: 'insideBottom', offset: -10 }}
+                  />
+                  <YAxis 
+                    type="category"
+                    dataKey="id" 
+                    tickFormatter={(value) => `#${value} - ${topOrders.find(o => o.id === value)?.username}`}
+                    width={150}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => formatCurrency(value)}
+                    labelFormatter={(value) => `Commande #${value} - ${topOrders.find(o => o.id === value)?.username}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="total" name="Montant" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+          
+          {/* Category Sales Chart */}
+          <ChartCard title="Ventes par catégorie">
+            {loading.category ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={categorySales}
+                    dataKey="revenue"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={150}
+                    fill="#8884d8"
+                    label={(entry) => `${entry.category}: ${formatCurrency(entry.revenue)}`}
+                  >
+                    {categorySales.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+          
+          {/* Top Products Chart */}
+          <ChartCard title="Top 10 produits par ventes">
+            {loading.products ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={topProducts}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis 
+                    type="category"
+                    dataKey="productName"
+                    width={150}
+                  />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => {
+                      if (name === "revenue") return formatCurrency(value);
+                      return value;
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="unitsSold" name="Unités vendues" fill="#8884d8" />
+                  <Bar dataKey="revenue" name="Revenus" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+        
+        {/* Column 2 */}
+        <div>
+          {/* Monthly Sales Chart */}
+          <ChartCard title="Ventes mensuelles des 12 derniers mois">
+            {loading.monthly ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart
+                  data={monthlySales}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" orientation="left" label={{ value: 'Revenus ($)', angle: -90, position: 'insideLeft' }} />
+                  <YAxis yAxisId="right" orientation="right" label={{ value: 'Nombre de commandes', angle: 90, position: 'insideRight' }} />
+                  <Tooltip formatter={(value: number, name: string) => {
+                    if (name === "revenue") return formatCurrency(value);
+                    return value;
+                  }} />
+                  <Legend />
+                  <Area yAxisId="left" type="monotone" dataKey="revenue" name="Revenus" fill="#8884d8" stroke="#8884d8" />
+                  <Area yAxisId="right" type="monotone" dataKey="orderCount" name="Commandes" fill="#82ca9d" stroke="#82ca9d" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+          
+          {/* Top Buyers Chart */}
+          <ChartCard title="Top 10 acheteurs">
+            {loading.buyers ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={topBuyers}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" label={{ value: 'Dépenses ($)', position: 'insideBottom', offset: -10 }} />
+                  <YAxis type="category" dataKey="username" width={100} />
+                  <Tooltip 
+                    formatter={(value: number) => formatCurrency(value)}
+                    labelFormatter={(value) => `Utilisateur: ${value}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="totalSpent" name="Dépenses totales" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+          
+          {/* Expensive Products Chart */}
+          <ChartCard title="10 produits les plus chers">
+            {loading.expensive ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart
+                  data={expensiveProducts}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="productName"
+                    angle={-45}
+                    textAnchor="end"
+                    interval={0}
+                    height={100}
+                  />
+                  <YAxis yAxisId="left" orientation="left" label={{ value: 'Prix ($)', angle: -90, position: 'insideLeft' }} />
+                  <YAxis yAxisId="right" orientation="right" label={{ value: 'Unités vendues', angle: 90, position: 'insideRight' }} />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => {
+                      if (name === "price") return formatCurrency(value);
+                      return value;
+                    }}
+                  />
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="price" name="Prix" stroke="#8884d8" />
+                  <Line yAxisId="right" type="monotone" dataKey="unitsSold" name="Unités vendues" stroke="#82ca9d" />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+          
+          {/* Most Viewed Products Chart */}
+          <ChartCard title="Produits les plus populaires (estimation)">
+            {loading.viewed ? (
+              <ChartLoading />
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart
+                  data={viewedProducts}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="productName"
+                    angle={-45}
+                    textAnchor="end"
+                    interval={0}
+                    height={100}
+                  />
+                  <YAxis yAxisId="left" orientation="left" label={{ value: 'Vues estimées', angle: -90, position: 'insideLeft' }} />
+                  <YAxis yAxisId="right" orientation="right" label={{ value: 'Note', angle: 90, position: 'insideRight' }} domain={[0, 5]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="estimatedViews" name="Vues estimées" stroke="#ffc658" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="rating" name="Note" stroke="#ff8042" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      </div>
     </div>
   );
 };
