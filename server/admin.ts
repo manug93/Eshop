@@ -316,6 +316,17 @@ export function setupAdmin(app: Express) {
     }
   });
   
+  // Get category mappings (admin only)
+  app.get("/api/admin/category-mappings", isAdmin, async (req, res, next) => {
+    try {
+      const mappings = await storage.getCategoryMappings();
+      res.json(mappings);
+    } catch (error) {
+      console.error('[Admin API] Error fetching category mappings:', error);
+      next(error);
+    }
+  });
+
   // Admin category mappings management
   app.post("/api/admin/category-mappings", isAdmin, async (req, res, next) => {
     try {
@@ -334,6 +345,25 @@ export function setupAdmin(app: Express) {
           return res.status(400).json({ 
             message: "Invalid mapping format. Each mapping must have externalCategory (string) and internalCategoryId (number)."
           });
+        }
+
+        // Check if the internal category exists
+        const category = await storage.getCategoryById(mapping.internalCategoryId);
+        if (!category) {
+          // Create a new category with name and slug based on the external category
+          const categoryName = mapping.externalCategory
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          const newCategory = await storage.createCategory({
+            name: categoryName,
+            slug: mapping.externalCategory,
+          });
+          
+          // Update the mapping to use the new category
+          mapping.internalCategoryId = newCategory.id;
+          console.log(`[Admin API] Created new category '${categoryName}' (ID: ${newCategory.id}) for external category '${mapping.externalCategory}'`);
         }
       }
       
