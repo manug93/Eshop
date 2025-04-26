@@ -899,6 +899,16 @@ export default function AdminDashboard() {
     return String(externalCat);
   };
   
+  // Get all categories with special handling for diacritics and case-insensitive sorting
+  const getAllCategories = () => {
+    if (!categories) return [];
+    
+    return [...categories].sort((a, b) => {
+      // Use localeCompare for proper sorting with diacritics
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+  };
+  
   // Helper to get slug from external category
   const getExternalCategorySlug = (externalCat: any): string => {
     if (typeof externalCat === 'object' && externalCat !== null && externalCat.slug) {
@@ -931,6 +941,11 @@ export default function AdminDashboard() {
     setLoadingExternalCategories(true);
     
     try {
+      toast({
+        title: "Importation en cours",
+        description: "Récupération des catégories externes...",
+      });
+      
       // First, load existing category mappings to compare and avoid duplications
       const existingMappingsResponse = await apiRequest('GET', '/api/admin/category-mappings');
       const existingMappings = await existingMappingsResponse.json();
@@ -941,9 +956,11 @@ export default function AdminDashboard() {
           if (typeof mapping.externalCategory === 'object' && mapping.externalCategory !== null) {
             return mapping.externalCategory.slug;
           }
-          return mapping.externalCategory;
+          return String(mapping.externalCategory);
         }
       );
+      
+      console.log("Existing external category slugs:", existingExternalSlugs);
       
       // Fetch external categories from DummyJSON API
       const response = await apiRequest('GET', '/api/admin/import-external-categories');
@@ -953,8 +970,14 @@ export default function AdminDashboard() {
       }
       
       const externalCategories: DummyJSONCategory[] = await response.json();
+      console.log("Fetched external categories:", externalCategories);
       
-      // Default category ID to use for new mappings
+      toast({
+        title: "Catégories récupérées",
+        description: `${externalCategories.length} catégories trouvées. Création en cours...`,
+      });
+      
+      // Default category ID to use for new mappings (usually 'other')
       const defaultCategoryId = categories && categories.length > 0 ? categories[0].id : 1;
       
       // Create new mappings array, merging existing and new ones
@@ -972,18 +995,25 @@ export default function AdminDashboard() {
       
       // Process each external category
       for (const cat of externalCategories) {
-        const slug = getExternalCategorySlug(cat);
+        const slug = typeof cat === 'string' ? cat : cat.slug || String(cat);
         
         // Skip if this category is already mapped
-        if (existingExternalSlugs.includes(slug)) continue;
+        if (existingExternalSlugs.includes(slug)) {
+          console.log(`Category ${slug} already mapped, skipping`);
+          continue;
+        }
           
-        // Use the category's name provided by the API, or format the slug
-        const categoryName = cat.name || getExternalCategoryName(cat);
+        // Format the category name
+        const categoryName = typeof cat === 'string' 
+          ? cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+          : cat.name || slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         
         newCategoriesCount++;
+        console.log(`Processing new category: ${categoryName} (${slug})`);
         
         // Check if we already have a similar category internally
         if (!existingCategoryNames.has(categoryName.toLowerCase())) {
+          console.log(`Creating new database category: ${categoryName}`);
           // Create a new category in the database since it doesn't exist
           categoryCreationPromises.push(
             createNewCategoryMutation.mutateAsync({
@@ -991,10 +1021,11 @@ export default function AdminDashboard() {
               slug: slug
             }).then(newCategory => {
               createdCategoriesCount++;
+              console.log(`Category created successfully: ${categoryName} (ID: ${newCategory.id})`);
               
               // Use the newly created category for mapping instead of the default
               mergedMappings.push({
-                externalCategory: cat,
+                externalCategory: typeof cat === 'string' ? cat : cat,
                 internalCategoryId: newCategory.id
               });
               
@@ -1004,7 +1035,7 @@ export default function AdminDashboard() {
               
               // Fall back to default category if creation fails
               mergedMappings.push({
-                externalCategory: cat,
+                externalCategory: typeof cat === 'string' ? cat : cat,
                 internalCategoryId: defaultCategoryId
               });
               
@@ -1012,9 +1043,10 @@ export default function AdminDashboard() {
             })
           );
         } else {
+          console.log(`Category name "${categoryName}" already exists, using default mapping`);
           // Use default category for now, user can change it in the mapping dialog
           mergedMappings.push({
-            externalCategory: cat,
+            externalCategory: typeof cat === 'string' ? cat : cat,
             internalCategoryId: defaultCategoryId
           });
         }
@@ -2135,7 +2167,7 @@ export default function AdminDashboard() {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories && categories.map(category => (
+                          {getAllCategories().map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
