@@ -242,11 +242,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(productData: InsertProduct): Promise<Product> {
-    const [product] = await db
-      .insert(products)
-      .values(productData)
-      .returning();
-    return product;
+    console.log(`[Server] Creating product with data:`, productData);
+    
+    // Convert the input data to match the expected format for insertion
+    const insertData: Record<string, any> = {};
+    
+    // Only include fields that exist in the products schema
+    Object.keys(productData).forEach(key => {
+      // Skip if the key doesn't exist in the products schema
+      if (!(key in products)) return;
+      
+      insertData[key] = productData[key as keyof typeof productData];
+    });
+    
+    console.log(`[Server] Processed insert data:`, insertData);
+    
+    try {
+      const [product] = await db
+        .insert(products)
+        .values(insertData as any)
+        .returning();
+      
+      console.log(`[Server] Created product:`, product);
+      return product;
+    } catch (error) {
+      console.error(`[Server] Error creating product:`, error);
+      throw error;
+    }
   }
 
   async updateProduct(id: number, productData: Partial<InsertProduct>): Promise<Product | undefined> {
@@ -257,14 +279,33 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Server] Active status being updated to:`, productData.active);
     }
     
-    const [updatedProduct] = await db
-      .update(products)
-      .set(productData)
-      .where(eq(products.id, id))
-      .returning();
+    // Convert the input data to match the expected format for the update
+    // This ensures we're not passing any unexpected properties
+    const updateData: Record<string, any> = {};
+    
+    // Only include fields that exist in the products schema
+    Object.keys(productData).forEach(key => {
+      // Skip if the key doesn't exist in the products schema
+      if (!(key in products)) return;
       
-    console.log(`[Server] Updated product:`, updatedProduct);
-    return updatedProduct;
+      updateData[key] = productData[key as keyof typeof productData];
+    });
+    
+    console.log(`[Server] Processed update data:`, updateData);
+    
+    try {
+      const [updatedProduct] = await db
+        .update(products)
+        .set(updateData)
+        .where(eq(products.id, id))
+        .returning();
+        
+      console.log(`[Server] Updated product:`, updatedProduct);
+      return updatedProduct;
+    } catch (error) {
+      console.error(`[Server] Error updating product ${id}:`, error);
+      throw error;
+    }
   }
   
   // Explicitly reactivate a product that was previously deactivated
