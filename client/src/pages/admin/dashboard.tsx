@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X, Edit, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2, PlusCircle, Download, Trash2, X, Edit, RefreshCw, Layers } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -150,6 +150,7 @@ export default function AdminDashboard() {
   const [categoryMappingDialogOpen, setCategoryMappingDialogOpen] = useState(false);
   const [categoryMappings, setCategoryMappings] = useState<CategoryMapping[]>([]);
   const [loadingCategoryMappings, setLoadingCategoryMappings] = useState(false);
+  const [loadingExternalCategories, setLoadingExternalCategories] = useState(false);
   
 
 
@@ -869,6 +870,47 @@ export default function AdminDashboard() {
     }
   };
   
+  // Import categories from DummyJSON API
+  const handleImportExternalCategories = async () => {
+    setLoadingExternalCategories(true);
+    
+    try {
+      const response = await apiRequest('GET', '/api/admin/import-external-categories');
+      
+      if (!response.ok) {
+        throw new Error(`Error importing categories: ${response.status} ${response.statusText}`);
+      }
+      
+      const externalCategories: string[] = await response.json();
+      
+      // Prepare mappings with external categories and default internal category
+      const defaultCategoryId = categories && categories.length > 0 ? categories[0].id : 1;
+      const newMappings = externalCategories.map(cat => ({
+        externalCategory: cat,
+        internalCategoryId: defaultCategoryId
+      }));
+      
+      setCategoryMappings(newMappings);
+      
+      toast({
+        title: "Categories imported",
+        description: `Successfully imported ${externalCategories.length} categories from DummyJSON.`,
+      });
+      
+      // Open the category mapping dialog to let user choose mappings
+      setCategoryMappingDialogOpen(true);
+    } catch (error) {
+      console.error("Error importing external categories:", error);
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Failed to import categories from DummyJSON.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingExternalCategories(false);
+    }
+  };
+
   // Save category mappings
   const handleSaveCategoryMappings = () => {
     saveCategoryMappingsMutation.mutate(categoryMappings);
@@ -1282,8 +1324,26 @@ export default function AdminDashboard() {
                   onClick={handleOpenCategoryMapping}
                   className="px-4 py-2 rounded"
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Layers className="mr-2 h-4 w-4" />
                   Category Mappings
+                </Button>
+                <Button 
+                  variant="secondary"
+                  onClick={handleImportExternalCategories}
+                  className="px-4 py-2 rounded"
+                  disabled={loadingExternalCategories}
+                >
+                  {loadingExternalCategories ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Import DummyJSON Categories
+                    </>
+                  )}
                 </Button>
               </div>
             </CardHeader>
