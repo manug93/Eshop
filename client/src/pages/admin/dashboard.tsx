@@ -810,9 +810,45 @@ export default function AdminDashboard() {
   };
   
   // Open category mapping dialog for DummyJSON categories
-  const handleOpenCategoryMapping = () => {
-    // Initialize mappings with external categories if none exist
-    if (categoryMappings.length === 0) {
+  const handleOpenCategoryMapping = async () => {
+    setLoadingCategoryMappings(true);
+    
+    try {
+      // Fetch existing mappings from the server
+      const response = await apiRequest('GET', '/api/admin/category-mappings');
+      const existingMappings = await response.json();
+      
+      console.log("Loaded existing mappings:", existingMappings);
+      
+      if (existingMappings && existingMappings.length > 0) {
+        // Use existing mappings if available
+        setCategoryMappings(existingMappings);
+      } else {
+        // Initialize with default mappings if none exist
+        const externalCategories = [
+          "smartphones", "laptops", "fragrances", "skincare", "groceries", 
+          "home-decoration", "furniture", "tops", "womens-dresses", 
+          "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", 
+          "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", 
+          "automotive", "motorcycle", "lighting"
+        ];
+        
+        setCategoryMappings(
+          externalCategories.map(cat => ({
+            externalCategory: cat,
+            internalCategoryId: categories && categories.length > 0 ? categories[0].id : 1
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error loading category mappings:", error);
+      toast({
+        title: "Error loading mappings",
+        description: "Could not load existing category mappings. Using default values.",
+        variant: "destructive",
+      });
+      
+      // Fall back to default mappings in case of error
       const externalCategories = [
         "smartphones", "laptops", "fragrances", "skincare", "groceries", 
         "home-decoration", "furniture", "tops", "womens-dresses", 
@@ -827,9 +863,10 @@ export default function AdminDashboard() {
           internalCategoryId: categories && categories.length > 0 ? categories[0].id : 1
         }))
       );
+    } finally {
+      setLoadingCategoryMappings(false);
+      setCategoryMappingDialogOpen(true);
     }
-    
-    setCategoryMappingDialogOpen(true);
   };
   
   // Save category mappings
@@ -1843,44 +1880,53 @@ export default function AdminDashboard() {
               </p>
             </div>
             
-            <div className="grid grid-cols-5 gap-4 text-sm font-medium border-b pb-2">
-              <div className="col-span-2">External Category</div>
-              <div className="col-span-3">Internal Category</div>
-            </div>
-            
-            {categoryMappings.map((mapping, index) => (
-              <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
-                <div className="col-span-2">
-                  <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                    {mapping.externalCategory.replace(/-/g, ' ')}
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <Select 
-                    value={mapping.internalCategoryId.toString()}
-                    onValueChange={(value) => {
-                      const newMappings = [...categoryMappings];
-                      newMappings[index] = {
-                        ...newMappings[index],
-                        internalCategoryId: parseInt(value)
-                      };
-                      setCategoryMappings(newMappings);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories && categories.map(category => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {loadingCategoryMappings ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Loading category mappings...</span>
               </div>
-            ))}
+            ) : (
+              <>
+                <div className="grid grid-cols-5 gap-4 text-sm font-medium border-b pb-2">
+                  <div className="col-span-2">External Category</div>
+                  <div className="col-span-3">Internal Category</div>
+                </div>
+                
+                {categoryMappings.map((mapping, index) => (
+                  <div key={mapping.externalCategory} className="grid grid-cols-5 gap-4 items-center py-2 border-b border-gray-100">
+                    <div className="col-span-2">
+                      <span className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
+                        {mapping.externalCategory.replace(/-/g, ' ')}
+                      </span>
+                    </div>
+                    <div className="col-span-3">
+                      <Select 
+                        value={mapping.internalCategoryId.toString()}
+                        onValueChange={(value) => {
+                          const newMappings = [...categoryMappings];
+                          newMappings[index] = {
+                            ...newMappings[index],
+                            internalCategoryId: parseInt(value)
+                          };
+                          setCategoryMappings(newMappings);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories && categories.map(category => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
           
           <DialogFooter>
