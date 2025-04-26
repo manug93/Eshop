@@ -324,32 +324,53 @@ export function setupAdmin(app: Express) {
     url: string;
   }
   
-  // Helper function to fetch external categories from DummyJSON
+  // Fixed list of DummyJSON categories based on the correct format
+  const DUMMY_JSON_CATEGORIES = [
+    "beauty",
+    "fragrances",
+    "furniture",
+    "groceries",
+    "home-decoration",
+    "kitchen-accessories",
+    "laptops",
+    "mens-shirts",
+    "mens-shoes",
+    "mens-watches",
+    "mobile-accessories",
+    "motorcycle",
+    "skin-care",
+    "smartphones",
+    "sports-accessories",
+    "sunglasses",
+    "tablets",
+    "tops",
+    "vehicle",
+    "womens-bags",
+    "womens-dresses",
+    "womens-jewellery",
+    "womens-shoes",
+    "womens-watches"
+  ];
+  
+  // Helper function to get formatted categories in the expected structure
   async function fetchExternalCategories(): Promise<DummyJSONCategory[]> {
     try {
-      const response = await fetch('https://dummyjson.com/products/categories');
-      
-      if (!response.ok) {
-        throw new Error(`Error fetching categories: ${response.status} ${response.statusText}`);
-      }
-      
-      const categories = await response.json();
-      
-      // Validate that we got an array of objects with the expected properties
-      if (!Array.isArray(categories)) {
-        throw new Error('Expected an array from DummyJSON API, but got something else');
-      }
-      
-      // Make sure each category has the expected structure
-      for (const category of categories) {
-        if (!category.slug || !category.name) {
-          console.warn('Invalid category format from DummyJSON:', category);
-        }
-      }
-      
-      return categories;
+      // Convert the array of strings to the expected structure with slug and name properties
+      return DUMMY_JSON_CATEGORIES.map(slug => {
+        // Format the name: convert hyphens to spaces and capitalize each word
+        const name = slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        return {
+          slug,
+          name,
+          url: `https://dummyjson.com/products/category/${slug}`
+        };
+      });
     } catch (error) {
-      console.error('Error fetching external categories:', error);
+      console.error('Error preparing external categories:', error);
       throw error;
     }
   }
