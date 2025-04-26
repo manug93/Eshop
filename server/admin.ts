@@ -317,8 +317,15 @@ export function setupAdmin(app: Express) {
     }
   });
   
+  // Interface for DummyJSON category response
+  interface DummyJSONCategory {
+    slug: string;
+    name: string;
+    url: string;
+  }
+  
   // Helper function to fetch external categories from DummyJSON
-  async function fetchExternalCategories(): Promise<string[]> {
+  async function fetchExternalCategories(): Promise<DummyJSONCategory[]> {
     try {
       const response = await fetch('https://dummyjson.com/products/categories');
       
@@ -327,6 +334,19 @@ export function setupAdmin(app: Express) {
       }
       
       const categories = await response.json();
+      
+      // Validate that we got an array of objects with the expected properties
+      if (!Array.isArray(categories)) {
+        throw new Error('Expected an array from DummyJSON API, but got something else');
+      }
+      
+      // Make sure each category has the expected structure
+      for (const category of categories) {
+        if (!category.slug || !category.name) {
+          console.warn('Invalid category format from DummyJSON:', category);
+        }
+      }
+      
       return categories;
     } catch (error) {
       console.error('Error fetching external categories:', error);

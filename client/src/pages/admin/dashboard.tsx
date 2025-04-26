@@ -870,14 +870,46 @@ export default function AdminDashboard() {
     }
   };
   
-  // Helper to convert external category string to a readable name
-  const formatExternalCategoryName = (externalCat: string): string => {
-    if (typeof externalCat !== 'string') return String(externalCat);
+  // Interface for DummyJSON category
+  interface DummyJSONCategory {
+    slug: string;
+    name: string;
+    url?: string;
+  }
+  
+  // Helper to get name from external category
+  const getExternalCategoryName = (externalCat: any): string => {
+    if (typeof externalCat === 'object' && externalCat !== null) {
+      if (externalCat.name) return externalCat.name;
+      if (externalCat.slug) {
+        return externalCat.slug
+          .split('-')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+    }
     
-    return externalCat
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    if (typeof externalCat === 'string') {
+      return externalCat
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    return String(externalCat);
+  };
+  
+  // Helper to get slug from external category
+  const getExternalCategorySlug = (externalCat: any): string => {
+    if (typeof externalCat === 'object' && externalCat !== null && externalCat.slug) {
+      return externalCat.slug;
+    }
+    
+    if (typeof externalCat === 'string') {
+      return externalCat;
+    }
+    
+    return String(externalCat);
   };
   
   // Create a new category in the database
@@ -903,9 +935,14 @@ export default function AdminDashboard() {
       const existingMappingsResponse = await apiRequest('GET', '/api/admin/category-mappings');
       const existingMappings = await existingMappingsResponse.json();
       
-      // Extract existing external categories
-      const existingExternalCategories = existingMappings.map(
-        (mapping: CategoryMapping) => mapping.externalCategory
+      // Extract existing external category slugs for comparison
+      const existingExternalSlugs = existingMappings.map(
+        (mapping: CategoryMapping) => {
+          if (typeof mapping.externalCategory === 'object' && mapping.externalCategory !== null) {
+            return mapping.externalCategory.slug;
+          }
+          return mapping.externalCategory;
+        }
       );
       
       // Fetch external categories from DummyJSON API
@@ -915,7 +952,7 @@ export default function AdminDashboard() {
         throw new Error(`Error importing categories: ${response.status} ${response.statusText}`);
       }
       
-      const externalCategories: string[] = await response.json();
+      const externalCategories: DummyJSONCategory[] = await response.json();
       
       // Default category ID to use for new mappings
       const defaultCategoryId = categories && categories.length > 0 ? categories[0].id : 1;
@@ -935,49 +972,51 @@ export default function AdminDashboard() {
       
       // Process each external category
       for (const cat of externalCategories) {
-        if (!existingExternalCategories.includes(cat)) {
-          // Format category name from external category (e.g. "home-decoration" -> "Home Decoration")
-          const categoryName = formatExternalCategoryName(cat);
-          const slug = typeof cat === 'string' ? cat : String(cat);
+        const slug = getExternalCategorySlug(cat);
+        
+        // Skip if this category is already mapped
+        if (existingExternalSlugs.includes(slug)) continue;
           
-          newCategoriesCount++;
-          
-          // Check if we already have a similar category internally
-          if (!existingCategoryNames.has(categoryName.toLowerCase())) {
-            // Create a new category in the database since it doesn't exist
-            categoryCreationPromises.push(
-              createNewCategoryMutation.mutateAsync({
-                name: categoryName,
-                slug: slug
-              }).then(newCategory => {
-                createdCategoriesCount++;
-                
-                // Use the newly created category for mapping instead of the default
-                mergedMappings.push({
-                  externalCategory: cat,
-                  internalCategoryId: newCategory.id
-                });
-                
-                return newCategory;
-              }).catch(err => {
-                console.error(`Failed to create category ${categoryName}:`, err);
-                
-                // Fall back to default category if creation fails
-                mergedMappings.push({
-                  externalCategory: cat,
-                  internalCategoryId: defaultCategoryId
-                });
-                
-                return null;
-              })
-            );
-          } else {
-            // Use default category for now, user can change it in the mapping dialog
-            mergedMappings.push({
-              externalCategory: cat,
-              internalCategoryId: defaultCategoryId
-            });
-          }
+        // Use the category's name provided by the API, or format the slug
+        const categoryName = cat.name || getExternalCategoryName(cat);
+        
+        newCategoriesCount++;
+        
+        // Check if we already have a similar category internally
+        if (!existingCategoryNames.has(categoryName.toLowerCase())) {
+          // Create a new category in the database since it doesn't exist
+          categoryCreationPromises.push(
+            createNewCategoryMutation.mutateAsync({
+              name: categoryName,
+              slug: slug
+            }).then(newCategory => {
+              createdCategoriesCount++;
+              
+              // Use the newly created category for mapping instead of the default
+              mergedMappings.push({
+                externalCategory: cat,
+                internalCategoryId: newCategory.id
+              });
+              
+              return newCategory;
+            }).catch(err => {
+              console.error(`Failed to create category ${categoryName}:`, err);
+              
+              // Fall back to default category if creation fails
+              mergedMappings.push({
+                externalCategory: cat,
+                internalCategoryId: defaultCategoryId
+              });
+              
+              return null;
+            })
+          );
+        } else {
+          // Use default category for now, user can change it in the mapping dialog
+          mergedMappings.push({
+            externalCategory: cat,
+            internalCategoryId: defaultCategoryId
+          });
         }
       }
       
