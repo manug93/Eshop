@@ -717,13 +717,13 @@ export function setupAdmin(app: Express) {
       // PostgreSQL query to get monthly sales data
       const monthlySales = await db.execute(sql`
         SELECT 
-          DATE_TRUNC('month', "createdAt") AS month,
+          DATE_TRUNC('month', created_at) AS month,
           SUM(total) AS revenue,
           COUNT(*) AS order_count
         FROM orders
         WHERE status = 'completed'
-        AND "createdAt" >= NOW() - INTERVAL '12 months'
-        GROUP BY DATE_TRUNC('month', "createdAt")
+        AND created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC('month', created_at)
         ORDER BY month ASC
       `);
       
