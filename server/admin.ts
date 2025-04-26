@@ -727,9 +727,9 @@ export function setupAdmin(app: Express) {
         ORDER BY month ASC
       `);
       
-      // Format the result
-      const formattedSales = (monthlySales as any[]).map(row => ({
-        month: new Date(row.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      // Format the result - use rows property from query result and handle typing issues
+      const formattedSales = monthlySales.rows.map(row => ({
+        month: new Date(String(row.month)).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         revenue: Number(row.revenue) || 0,
         orderCount: Number(row.order_count) || 0
       }));
@@ -760,7 +760,7 @@ export function setupAdmin(app: Express) {
       `);
       
       // Format the result and handle null categories
-      const formattedData = (categoryData as any[]).map(row => ({
+      const formattedData = categoryData.rows.map(row => ({
         category: row.category_name || 'Uncategorized',
         revenue: Number(row.revenue) || 0,
         unitsSold: Number(row.units_sold) || 0
@@ -790,7 +790,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = (topBuyers as any[]).map(row => ({
+      const formattedData = topBuyers.rows.map(row => ({
         username: row.username,
         userId: row.user_id,
         orderCount: Number(row.order_count) || 0,
@@ -822,7 +822,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = (topProducts as any[]).map(row => ({
+      const formattedData = topProducts.rows.map(row => ({
         productId: row.product_id,
         productName: row.product_name,
         unitsSold: Number(row.units_sold) || 0,
@@ -854,7 +854,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = (expensiveProducts as any[]).map(row => ({
+      const formattedData = expensiveProducts.rows.map(row => ({
         productId: row.product_id,
         productName: row.product_name,
         price: Number(row.price) || 0,
@@ -887,7 +887,7 @@ export function setupAdmin(app: Express) {
         LIMIT 10
       `);
       
-      const formattedData = (popularProducts as any[]).map(row => ({
+      const formattedData = popularProducts.rows.map(row => ({
         productId: row.product_id,
         productName: row.product_name,
         rating: Number(row.rating) || 0,

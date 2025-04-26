@@ -219,14 +219,19 @@ const DashboardCharts = () => {
             <BarChart
               data={topOrders}
               margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+              layout="vertical"
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="id" 
-                label={{ value: 'Commande #', position: 'insideBottom', offset: -10 }}
-                tickFormatter={(value) => `#${value}`}
+                type="number"
+                label={{ value: 'Montant ($)', position: 'insideBottom', offset: -10 }}
               />
-              <YAxis label={{ value: 'Montant ($)', angle: -90, position: 'insideLeft' }} />
+              <YAxis 
+                type="category"
+                dataKey="id" 
+                tickFormatter={(value) => `#${value} - ${topOrders.find(o => o.id === value)?.username}`}
+                width={150}
+              />
               <Tooltip 
                 formatter={(value: number) => formatCurrency(value)}
                 labelFormatter={(value) => `Commande #${value} - ${topOrders.find(o => o.id === value)?.username}`}
@@ -326,16 +331,15 @@ const DashboardCharts = () => {
             <BarChart
               data={topProducts}
               margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+              layout="vertical"
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
+              <XAxis type="number" />
+              <YAxis 
+                type="category"
                 dataKey="productName"
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-                height={100}
+                width={150}
               />
-              <YAxis label={{ value: 'Unités vendues', angle: -90, position: 'insideLeft' }} />
               <Tooltip 
                 formatter={(value: number, name: string) => {
                   if (name === "revenue") return formatCurrency(value);
@@ -390,7 +394,7 @@ const DashboardCharts = () => {
           <ChartLoading />
         ) : (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart
+            <LineChart
               data={viewedProducts}
               margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
             >
@@ -402,12 +406,13 @@ const DashboardCharts = () => {
                 interval={0}
                 height={100}
               />
-              <YAxis label={{ value: 'Vues estimées', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="left" orientation="left" label={{ value: 'Vues estimées', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="right" orientation="right" label={{ value: 'Note', angle: 90, position: 'insideRight' }} domain={[0, 5]} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="estimatedViews" name="Vues estimées" fill="#ffc658" />
-              <Bar dataKey="rating" name="Note" fill="#ff8042" />
-            </BarChart>
+              <Line yAxisId="left" type="monotone" dataKey="estimatedViews" name="Vues estimées" stroke="#ffc658" strokeWidth={2} dot={{ r: 4 }} />
+              <Line yAxisId="right" type="monotone" dataKey="rating" name="Note" stroke="#ff8042" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
           </ResponsiveContainer>
         )}
       </ChartCard>
