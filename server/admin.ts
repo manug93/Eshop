@@ -254,6 +254,68 @@ export function setupAdmin(app: Express) {
     }
   });
   
+  // Update category (admin only)
+  app.patch("/api/admin/categories/:id", isAdmin, async (req, res, next) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      const categoryData: Partial<InsertCategory> = req.body;
+      
+      // Auto-generate slug if name is provided but slug is not
+      if (categoryData.name && !categoryData.slug) {
+        categoryData.slug = categoryData.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
+      
+      // Prevent updating the default category (ID 1)
+      if (categoryId === 1 && (categoryData.name || categoryData.slug)) {
+        return res.status(400).json({ 
+          message: "Cannot modify the default category name or slug." 
+        });
+      }
+      
+      // Update the category in the database
+      const updatedCategory = await storage.updateCategory(categoryId, categoryData);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error('[Admin API] Error updating category:', error);
+      next(error);
+    }
+  });
+  
+  // Delete category (admin only)
+  app.delete("/api/admin/categories/:id", isAdmin, async (req, res, next) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      
+      // Prevent deletion of the default category (ID 1)
+      if (categoryId === 1) {
+        return res.status(400).json({ 
+          message: "Cannot delete the default category. It is used for products without a category." 
+        });
+      }
+      
+      const result = await storage.deleteCategory(categoryId);
+      
+      res.json({ 
+        success: result, 
+        message: result ? 
+          "Category deleted successfully. Products in this category have been moved to the default category." : 
+          "Category not found or could not be deleted." 
+      });
+    } catch (error) {
+      console.error('[Admin API] Error deleting category:', error);
+      next(error);
+    }
+  });
+  
   // Admin category mappings management
   app.post("/api/admin/category-mappings", isAdmin, async (req, res, next) => {
     try {

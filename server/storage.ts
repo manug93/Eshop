@@ -67,6 +67,8 @@ export interface IStorage {
   getCategoryById(id: number): Promise<Category | undefined>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, categoryData: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
   
   // Order methods
   getOrders(userId?: number): Promise<Order[]>;
@@ -367,6 +369,48 @@ export class DatabaseStorage implements IStorage {
       .values(categoryData)
       .returning();
     return category;
+  }
+  
+  async updateCategory(id: number, categoryData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const [updatedCategory] = await db
+      .update(categories)
+      .set(categoryData)
+      .where(eq(categories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    try {
+      // First, we need to check if there are products with this category
+      const productsInCategory = await db
+        .select()
+        .from(products)
+        .where(eq(products.categoryId, id));
+      
+      // If there are products, move them to the default category (ID 1)
+      if (productsInCategory.length > 0) {
+        await db
+          .update(products)
+          .set({ categoryId: 1 }) // Moved to default category
+          .where(eq(products.categoryId, id));
+      }
+      
+      // Delete all category mappings referencing this category
+      await db
+        .delete(categoryMappings)
+        .where(eq(categoryMappings.internalCategoryId, id));
+      
+      // Now delete the category
+      await db
+        .delete(categories)
+        .where(eq(categories.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error(`[Server] Error deleting category ID ${id}:`, error);
+      return false;
+    }
   }
 
   // Order methods
