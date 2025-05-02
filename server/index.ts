@@ -4,15 +4,36 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed";
 import cors from "cors";
 import 'dotenv/config';
+import { createServer } from './https';
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5000",       // frontend in dev
+  "https://localhost:5000",      // frontend in dev
+  "https://eshop.inchtechs.com", // frontend in prod
+  "http://eshop.inchtechs.com",  // frontend in prod (non-HTTPS)
+  "https://www.eshop.inchtechs.com", // www subdomain
+  "http://www.eshop.inchtechs.com"   // www subdomain (non-HTTPS)
+];
+
 // Configure CORS
 app.use(cors({
-  origin: true, // Reflect the request origin
-  credentials: true, // Allow cookies to be sent with requests
+  origin: (origin, callback) => {
+    if (!origin) {
+      // allow requests like curl or server-side without origin
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Important pour les cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie'] // Permet l'accès aux cookies côté client
 }));
 
 app.use(express.json());
@@ -71,13 +92,19 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
+  // Créer le serveur (HTTP en production, HTTPS en développement)
+  const serverInstance = createServer(app);
+
+  //export default app;
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
+
   const port = 5000;
-  server.listen({
-    port,
-  }, () => {
-    log(`serving on port ${port}`);
+  serverInstance.listen(port, () => {
+    const protocol = process.env.NODE_ENV === 'production' ? 'HTTP' : 'HTTPS';
+    log(`serving on port ${port} with ${protocol}`);
   });
 })();
+
+

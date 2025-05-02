@@ -35,6 +35,7 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
   res.status(401).send("Unauthorized");
 }
 
+const isProd = process.env.NODE_ENV === "production";
 export function setupAuth(app: Express) {
   // Session configuration
   const sessionOptions: session.SessionOptions = {
@@ -42,8 +43,10 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: isProd,
+      sameSite:isProd?"none":"lax",
       maxAge: 1000 * 60 * 60 * 24, // 1 day
+      httpOnly: true,
     },
     store: storage.sessionStore,
   };
@@ -126,6 +129,14 @@ export function setupAuth(app: Express) {
     } catch (error) {
       next(error);
     }
+  });
+
+  app.use((req, res, next) => {
+    console.log("➡️ Cookies reçus:", req.cookies);
+    console.log("➡️ Session ID:", req.sessionID);
+    console.log("➡️ Session data:", req.session);
+
+    next();
   });
 
   app.post("/api/login", (req, res, next) => {
