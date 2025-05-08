@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-
+import { log } from "./vite";
 import { setupAuth } from "./auth";
 import { setupI18n } from "./i18n";
 import { setupAdmin } from "./admin";
@@ -35,8 +35,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   setupI18n(app);
   setupAdmin(app);
-  
   // API routes for the e-commerce app
+  log("Routes registered", "routes");
   
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -305,7 +305,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userId = (req.user as any).id;
       const { id, title, price, thumbnail, quantity = 1, description = "", brand = "", category = "other" } = req.body;
-      
+      console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$");  
+      console.log("The user ID is ", userId);
+      console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$");
+      console.log("Product is ", req.body);
+      console.log("Product ID is ", id);
       if (!id) {
         return res.status(400).json({ message: "Product ID is required" });
       }

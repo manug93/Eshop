@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,31 +7,19 @@ import {
 import { User } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AxiosResponse } from "axios";
 
 type UserWithoutPassword = Omit<User, "password">;
 
-type AuthContextType = {
+interface AuthContextType {
   user: UserWithoutPassword | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<UserWithoutPassword, Error, LoginData>;
+  loginMutation: UseMutationResult<any, Error, { username: string; password: string }>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<UserWithoutPassword, Error, RegisterData>;
-};
-
-type LoginData = {
-  username: string;
-  password: string;
-};
-
-type RegisterData = {
-  username: string;
-  password: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  preferredLanguage?: string;
-};
+  registerMutation: UseMutationResult<any, Error, { username: string; password: string; email: string }>;
+  refreshToken: () => Promise<void>;
+}
 
 // Create the context with a default value that matches the shape
 const defaultContext: AuthContextType = {
@@ -40,150 +28,276 @@ const defaultContext: AuthContextType = {
   error: null,
   loginMutation: {} as any,
   logoutMutation: {} as any,
-  registerMutation: {} as any
+  registerMutation: {} as any,
+  refreshToken: async () => {},
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultContext);
-export function AuthProvider({ children }: { children: ReactNode }) {
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<UserWithoutPassword | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+
+  // Get user data
+  const { data: user, isLoading, error } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        return null;
+      }
+
+      try {
+        const response = await apiRequest("GET", "/api/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.status === 401) {
+          // Tentative de rafraîchissement du token
+          const refreshToken = localStorage.getItem("refreshToken");
+          if (refreshToken) {
+            try {
+              const refreshResponse = await apiRequest("POST", "/api/refresh", {
+                body: { refreshToken },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (refreshResponse.status === 200) {
+                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data;
+                localStorage.setItem("accessToken", newAccessToken);
+                localStorage.setItem("refreshToken", newRefreshToken);
+
+                // Nouvelle tentative avec le nouveau token
+                const newUserResponse = await apiRequest("GET", "/api/me", {
+                  headers: {
+                    Authorization: `Bearer ${newAccessToken}`,
+                  },
+                });
+
+                if (newUserResponse.status === 200) {
+                  return newUserResponse.data;
+                }
+              }
+            } catch (refreshError) {
+              console.error("Error refreshing token:", refreshError);
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("refreshToken");
+              return null;
+            }
+          }
+          return null;
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        return null;
+      }
+    },
+    retry: false,
+    enabled: !!localStorage.getItem("accessToken"),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
+  // Login mutation
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      console.log('Attempting login with:', credentials.username);
-      try {
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(credentials),
-          credentials: "include"
-        });
-        
-        const userData = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(userData.message || "Login failed");
-        }
-        
-        console.log('Login response:', userData);
-        return userData;
-      } catch (error) {
-        console.error("Login fetch error:", error);
-        throw error;
-      }
-    },
-    onSuccess: (user: UserWithoutPassword) => {
-      console.log('Setting user data in query cache');
-      queryClient.setQueryData(["/api/user"], user);
-      // Invalidate the user query to force a refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      toast({
-        title: "Login successful",
-        description: `Welcome, ${user.username}!`,
+    mutationFn: async (credentials: { username: string; password: string }) => {
+      const response = await apiRequest("POST", "/api/login", {
+        body: credentials,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+      if (response.status !== 200) {
+        throw new Error("Login failed");
+      }
+      return response.data;
     },
-    onError: (error: Error) => {
-      console.error('Login error:', error);
+    onSuccess: (data) => {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      queryClient.setQueryData(["user"], data.user);
+    },
+    onError: (error) => {
+      console.error("Login error:", error);
       toast({
-        title: "Login failed",
+        title: "Erreur de connexion",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
+  // Register mutation
   const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterData) => {
-      console.log('Attempting registration with:', userData.username);
-      try {
-        const res = await fetch("/api/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
-          credentials: "include"
-        });
-        
-        const userResponse = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(userResponse.message || "Registration failed");
-        }
-        
-        console.log('Registration response:', userResponse);
-        return userResponse;
-      } catch (error) {
-        console.error("Registration fetch error:", error);
-        throw error;
-      }
-    },
-    onSuccess: (user: UserWithoutPassword) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.username}!`,
+    mutationFn: async (data: { username: string; password: string; email: string }) => {
+      const response = await apiRequest("POST", "/api/register", {
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+      const responseData = response.data;
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      console.log('Attempting logout');
-      try {
-        const res = await fetch("/api/logout", {
-          method: "POST",
-          credentials: "include"
-        });
-        
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "Logout failed");
-        }
-        
-        console.log('Logout successful');
-      } catch (error) {
-        console.error("Logout fetch error:", error);
-        throw error;
+      if (responseData.accessToken && responseData.refreshToken) {
+        localStorage.setItem("accessToken", responseData.accessToken);
+        localStorage.setItem("refreshToken", responseData.refreshToken);
       }
+
+      return responseData;
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       toast({
-        title: "Logged out",
-        description: "Successfully logged out",
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
-        title: "Logout failed",
+        title: "Erreur d'inscription",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        await apiRequest("POST", "/api/logout", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+      }
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["user"], null);
+      queryClient.removeQueries({ queryKey: ["user"] });
+    },
+  });
+
+  // Refresh token function
+  const refreshToken = async (): Promise<void> => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      throw new Error("Aucun token de rafraîchissement disponible");
+    }
+
+    try {
+      const response = await apiRequest("POST", "/api/refresh", {
+        body: { refreshToken },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.status === 401) {
+        // Token invalide ou expiré
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        queryClient.setQueryData(["user"], null);
+        throw new Error("Session expirée, veuillez vous reconnecter");
+      }
+
+      if (response.status !== 200) {
+        throw new Error("Échec du rafraîchissement du token");
+      }
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", newRefreshToken);
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement du token:", error);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      queryClient.setQueryData(["user"], null);
+      throw error;
+    }
+  };
+
+  // Add token to requests
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (input, init) => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        init = init || {};
+        init.headers = {
+          ...init.headers,
+          Authorization: `Bearer ${accessToken}`,
+        };
+      }
+      return originalFetch(input, init);
+    };
+  }, []);
+
+  // Auto refresh token
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+      
+      if (accessToken && refreshToken) {
+        try {
+          const response = await apiRequest("POST", "/api/refresh", {
+            body: { refreshToken },
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          if (response.status === 200) {
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+            localStorage.setItem("accessToken", newAccessToken);
+            localStorage.setItem("refreshToken", newRefreshToken);
+          }
+        } catch (error) {
+          console.error("Error refreshing token:", error);
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          queryClient.setQueryData(["user"], null);
+        }
+      }
+    }, 14 * 60 * 1000); // Refresh 1 minute before token expires
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Initial check for tokens
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    
+    if (accessToken && refreshToken) {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    }
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user: user as UserWithoutPassword | null,
         isLoading,
         error,
         loginMutation,
         logoutMutation,
         registerMutation,
+        refreshToken,
       }}
     >
       {children}
@@ -193,6 +307,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  // Since we now have a default value, we'll never get null here
   return context;
 }

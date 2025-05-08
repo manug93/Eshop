@@ -38,8 +38,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     queryKey: ['/api/languages'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/languages');
-      const data = await res.json();
-      return data as Language[];
+      return res.data;
     }
   });
 
@@ -59,7 +58,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const languageMutation = useMutation({
     mutationFn: async (code: string) => {
       if (user) {
-        await apiRequest('POST', '/api/user/language', { language: code });
+        await apiRequest('POST', '/api/user/language', {
+          body: { language: code }
+        });
       }
       return code;
     },

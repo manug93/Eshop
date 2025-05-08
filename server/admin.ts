@@ -1,5 +1,7 @@
 import { Express, Request, Response, NextFunction } from "express";
+import passport from "passport";
 import { storage } from "./storage";
+import { verifyAccessToken } from "./jwt";
 import { 
   InsertProduct, 
   InsertCategory, 
@@ -18,18 +20,29 @@ import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
 import Stripe from "stripe";
 import fetch from "node-fetch";
+import { extractToken } from "./auth";
 
 // Admin middleware to check if the user is an admin
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
+  const token = extractToken(req);
+  console.log("token :",token);
+  if (!token) {
+    return res.status(401).json({ message: "Token invalide" });
   }
-  
-  if (!(req.user as any).isAdmin) {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  
-  next();
+  verifyAccessToken(token)
+    .then(async (payload) => {
+      req.user = { id: payload.userId } as Express.User;
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      if (!(user as any).isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      next();
+    })
+    .catch(() => res.status(401).json({ message: "Token invalide" }));
+    
 }
 
 export function setupAdmin(app: Express) {

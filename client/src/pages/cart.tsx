@@ -12,14 +12,14 @@ import { Loader2, Trash2, ShoppingCart } from "lucide-react";
 export default function Cart() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { t } = useTranslations();
   const [promoCode, setPromoCode] = useState("");
   
   // Utiliser le hook centralisé pour le panier
   const { 
     cartItems, 
-    isLoading, 
+    isLoading: isCartLoading, 
     subtotal,
     updateQuantity, 
     removeFromCart, 
@@ -36,8 +36,10 @@ export default function Cart() {
     mutationFn: async (code: string) => {
       setApplyingPromo(true);
       try {
-        const response = await apiRequest('POST', '/api/apply-promo', { code });
-        return response.json();
+        const response = await apiRequest('POST', '/api/apply-promo', {
+          body: { code }
+        });
+        return response.data;
       } finally {
         setApplyingPromo(false);
       }
@@ -63,10 +65,10 @@ export default function Cart() {
     mutationFn: async () => {
       setCheckingOut(true);
       try {
-        const response = await apiRequest('POST', '/api/create-payment-intent', { 
-          amount: calculateTotal() 
+        const response = await apiRequest('POST', '/api/create-payment-intent', {
+          body: { items: cartItems, amount: calculateTotal() }
         });
-        return response.json();
+        return response.data;
       } finally {
         setCheckingOut(false);
       }
@@ -137,10 +139,11 @@ export default function Cart() {
     return subtotal + calculateTax() + calculateShipping();
   };
 
-  if (isLoading) {
+  // Afficher le loader pendant le chargement de l'authentification ou du panier
+  if (isAuthLoading || isCartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

@@ -21,6 +21,7 @@ import AuthPage from "@/pages/auth-page";
 import UserOrders from "@/pages/user-orders";
 import UserProfile from "@/pages/user-profile";
 import AdminDashboard from "@/pages/admin/dashboard";
+import { useAuthCheck } from '@/hooks/use-auth-check';
 
 // Layout component with navigation
 function Layout({ children }: { children: React.ReactNode }) {
@@ -122,6 +123,16 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
       <Route path="/">
@@ -193,6 +204,8 @@ function Router() {
 }
 
 function App() {
+  useAuthCheck();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

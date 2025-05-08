@@ -5,7 +5,7 @@ import { createServer as createHttpServer } from 'http';
 
 export function createServer(app: any) {
   // En production, utilisez un serveur HTTP normal
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     return createHttpServer(app);
   }
 

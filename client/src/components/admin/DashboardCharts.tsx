@@ -116,8 +116,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, orders: true }));
           const response = await apiRequest('GET', '/api/admin/charts/top-orders');
-          const data = await response.json();
-          setTopOrders(data);
+          setTopOrders(response.data);
           setLoading(prev => ({ ...prev, orders: false }));
         } catch (error) {
           console.error("Error fetching top orders:", error);
@@ -128,8 +127,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, monthly: true }));
           const response = await apiRequest('GET', '/api/admin/charts/sales-by-month');
-          const data = await response.json();
-          setMonthlySales(data);
+          setMonthlySales(response.data);
           setLoading(prev => ({ ...prev, monthly: false }));
         } catch (error) {
           console.error("Error fetching monthly sales:", error);
@@ -140,8 +138,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, category: true }));
           const response = await apiRequest('GET', '/api/admin/charts/sales-by-category');
-          const data = await response.json();
-          setCategorySales(data);
+          setCategorySales(response.data);
           setLoading(prev => ({ ...prev, category: false }));
         } catch (error) {
           console.error("Error fetching category sales:", error);
@@ -152,8 +149,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, buyers: true }));
           const response = await apiRequest('GET', '/api/admin/charts/top-buyers');
-          const data = await response.json();
-          setTopBuyers(data);
+          setTopBuyers(response.data);
           setLoading(prev => ({ ...prev, buyers: false }));
         } catch (error) {
           console.error("Error fetching top buyers:", error);
@@ -164,8 +160,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, products: true }));
           const response = await apiRequest('GET', '/api/admin/charts/top-products');
-          const data = await response.json();
-          setTopProducts(data);
+          setTopProducts(response.data);
           setLoading(prev => ({ ...prev, products: false }));
         } catch (error) {
           console.error("Error fetching top products:", error);
@@ -176,8 +171,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, expensive: true }));
           const response = await apiRequest('GET', '/api/admin/charts/expensive-products');
-          const data = await response.json();
-          setExpensiveProducts(data);
+          setExpensiveProducts(response.data);
           setLoading(prev => ({ ...prev, expensive: false }));
         } catch (error) {
           console.error("Error fetching expensive products:", error);
@@ -188,8 +182,7 @@ const DashboardCharts = () => {
         try {
           setLoading(prev => ({ ...prev, viewed: true }));
           const response = await apiRequest('GET', '/api/admin/charts/most-viewed');
-          const data = await response.json();
-          setViewedProducts(data);
+          setViewedProducts(response.data);
           setLoading(prev => ({ ...prev, viewed: false }));
         } catch (error) {
           console.error("Error fetching viewed products:", error);

@@ -163,7 +163,7 @@ export default function AdminDashboard() {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', '/api/admin/stats');
-        return await response.json();
+        return await response.data;
       } catch (error) {
         console.error('Error fetching admin stats:', error);
         return {
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', '/api/admin/orders');
-        return await response.json();
+        return await response.data;
       } catch (error) {
         console.error('Error fetching orders:', error);
         return [];
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
       try {
         // Include inactive products for admin view with the includeInactive parameter
         const response = await apiRequest('GET', '/api/products?limit=100&includeInactive=true');
-        return await response.json();
+        return await response.data;
       } catch (error) {
         console.error('Error fetching products:', error);
         return { products: [], total: 0 };
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', '/api/admin/users');
-        return await response.json();
+        return await response.data;
       } catch (error) {
         console.error('Error fetching users:', error);
         return [];
@@ -229,7 +229,7 @@ export default function AdminDashboard() {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', '/api/categories');
-        return await response.json();
+        return await response.data;
       } catch (error) {
         console.error('Error fetching categories:', error);
         return [];
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
   const updateOrderStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: number; status: string }) => {
       const response = await apiRequest('PATCH', `/api/admin/orders/${orderId}/status`, { status });
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/orders'] });
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
   const refundOrderMutation = useMutation({
     mutationFn: async ({ orderId, paymentIntentId }: { orderId: number; paymentIntentId: string }) => {
       const response = await apiRequest('POST', `/api/admin/orders/${orderId}/refund`, { paymentIntentId });
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/orders'] });
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
     mutationFn: async (productId: number) => {
       console.log("Delete mutation called with product ID:", productId);
       const response = await apiRequest('DELETE', `/api/admin/products/${productId}`);
-      return response.json();
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
   const updateUserRoleMutation = useMutation({
     mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
       const response = await apiRequest('PATCH', `/api/admin/users/${userId}`, { isAdmin });
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
   const createProductMutation = useMutation({
     mutationFn: async (productData: ProductFormData) => {
       const response = await apiRequest('POST', '/api/admin/products', productData);
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
       const { id, ...data } = productData;
       console.log("Sending PATCH request to server with data:", data);
       const response = await apiRequest('PATCH', `/api/admin/products/${id}`, data);
-      const responseData = await response.json();
+      const responseData = await response.data;
       console.log("Server response:", responseData);
       return responseData;
     },
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
   const reactivateProductMutation = useMutation({
     mutationFn: async (productId: number) => {
       const response = await apiRequest('POST', `/api/admin/products/${productId}/reactivate`);
-      return response.json();
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -418,7 +418,7 @@ export default function AdminDashboard() {
   const deleteZeroStockMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('DELETE', '/api/admin/products/zerostock');
-      return response.json();
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -443,7 +443,7 @@ export default function AdminDashboard() {
   const createCategoryMutation = useMutation({
     mutationFn: async (categoryData: CategoryFormData) => {
       const response = await apiRequest('POST', '/api/admin/categories', categoryData);
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
@@ -469,7 +469,7 @@ export default function AdminDashboard() {
     mutationFn: async (categoryData: CategoryFormData) => {
       const { id, ...data } = categoryData;
       const response = await apiRequest('PATCH', `/api/admin/categories/${id}`, data);
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
@@ -494,7 +494,7 @@ export default function AdminDashboard() {
   const deleteCategoryMutation = useMutation({
     mutationFn: async (categoryId: number) => {
       const response = await apiRequest('DELETE', `/api/admin/categories/${categoryId}`);
-      return response.json();
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
@@ -516,7 +516,7 @@ export default function AdminDashboard() {
   const saveCategoryMappingsMutation = useMutation({
     mutationFn: async (mappings: CategoryMapping[]) => {
       const response = await apiRequest('POST', '/api/admin/category-mappings', { mappings });
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       setCategoryMappingDialogOpen(false);
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
         checkDuplicates,
         categoryMappings: categoryMappings.length > 0 ? categoryMappings : undefined
       });
-      return response.json();
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -820,7 +820,7 @@ export default function AdminDashboard() {
     try {
       // Fetch existing mappings from the server
       const response = await apiRequest('GET', '/api/admin/category-mappings');
-      const existingMappings = await response.json();
+      const existingMappings = await response.data;
       
       console.log("Loaded existing mappings:", existingMappings);
       
@@ -929,7 +929,7 @@ export default function AdminDashboard() {
   const createNewCategoryMutation = useMutation({
     mutationFn: async (categoryData: CategoryFormData) => {
       const response = await apiRequest('POST', '/api/admin/categories', categoryData);
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
@@ -951,7 +951,7 @@ export default function AdminDashboard() {
       
       // First, load existing category mappings to compare and avoid duplications
       const existingMappingsResponse = await apiRequest('GET', '/api/admin/category-mappings');
-      const existingMappings = await existingMappingsResponse.json();
+      const existingMappings = await existingMappingsResponse.data;
       
       // Extract existing external category slugs for comparison
       const existingExternalSlugs = existingMappings.map(
@@ -972,7 +972,7 @@ export default function AdminDashboard() {
         throw new Error(`Error importing categories: ${response.status} ${response.statusText}`);
       }
       
-      const externalCategories: DummyJSONCategory[] = await response.json();
+      const externalCategories: DummyJSONCategory[] = await response.data;
       console.log("Fetched external categories:", externalCategories);
       
       toast({

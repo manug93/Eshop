@@ -1,26 +1,79 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+async function throwIfResNotOk(error: AxiosError) {
+  if (error.response) {
+    const text = error.response.data || error.response.statusText;
+    throw new Error(`${error.response.status}: ${text}`);
   }
+  throw error;
 }
 
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  options?: {
+    body?: unknown;
+    headers?: Record<string, string>;
+  }
+): Promise<AxiosResponse> {
+  const accessToken = localStorage.getItem("accessToken");
+  const headers: Record<string, string> = {
+    ...(options?.headers || {}),
+  };
 
-  await throwIfResNotOk(res);
-  return res;
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
+  const config: AxiosRequestConfig = {
+    method,
+    url,
+    headers,
+    withCredentials: true,
+  };
+
+  if (method !== "GET" && method !== "HEAD" && options?.body) {
+    if (!headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+      headers["Accept"] = "application/json";
+    }
+    config.data = options.body;
+  }
+
+  try {
+    const response = await axios(config);
+    return response;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        try {
+          const refreshResponse = await axios.post("/api/refresh", { refreshToken }, {
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            withCredentials: true,
+          });
+
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data;
+          localStorage.setItem("accessToken", newAccessToken);
+          localStorage.setItem("refreshToken", newRefreshToken);
+
+          // Réessayer la requête originale avec le nouveau token
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${newAccessToken}`,
+          };
+          return axios(config);
+        } catch (refreshError: unknown) {
+          console.error("Error refreshing token:", refreshError);
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          throw refreshError;
+        }
+      }
+    }
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -29,16 +82,23 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
+    const accessToken = localStorage.getItem("accessToken");
+    const headers: Record<string, string> = {
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    };
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    try {
+      const response = await axios.get(queryKey[0] as string, {
+        headers,
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 401 && unauthorizedBehavior === "returnNull") {
+        return null;
+      }
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

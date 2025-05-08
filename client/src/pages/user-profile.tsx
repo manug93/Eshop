@@ -65,7 +65,7 @@ export default function UserProfile() {
       try {
         const res = await apiRequest('GET', '/api/user/addresses');
         if (!res.ok) return [];
-        return await res.json();
+        return res.data;
       } catch (error) {
         return [];
       }
@@ -80,7 +80,7 @@ export default function UserProfile() {
       try {
         const res = await apiRequest('GET', '/api/user/addresses/default');
         if (!res.ok) return null;
-        return await res.json();
+        return res.data;
       } catch (error) {
         return null;
       }
@@ -131,11 +131,13 @@ export default function UserProfile() {
   // Mutation pour mettre à jour le profil
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormValues) => {
-      const res = await apiRequest('PUT', '/api/user/profile', data);
+      const res = await apiRequest('PUT', '/api/user/profile', {
+        body: data
+      });
       if (!res.ok) {
         throw new Error(t.errorUpdatingProfile || "Erreur lors de la mise à jour du profil");
       }
-      return await res.json();
+      return res.data;
     },
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(['/api/user'], updatedUser);
@@ -156,11 +158,13 @@ export default function UserProfile() {
   // Mutation pour créer une nouvelle adresse
   const createAddressMutation = useMutation({
     mutationFn: async (data: AddressFormValues & { isDefault?: boolean }) => {
-      const res = await apiRequest('POST', '/api/user/addresses', data);
+      const res = await apiRequest('POST', '/api/user/addresses', {
+        body: data
+      });
       if (!res.ok) {
         throw new Error("Erreur lors de la création de l'adresse");
       }
-      return await res.json();
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/addresses'] });
@@ -182,11 +186,13 @@ export default function UserProfile() {
   // Mutation pour mettre à jour une adresse existante
   const updateAddressMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: AddressFormValues }) => {
-      const res = await apiRequest('PUT', `/api/user/addresses/${id}`, data);
+      const res = await apiRequest('PUT', `/api/user/addresses/${id}`, {
+        body: data
+      });
       if (!res.ok) {
         throw new Error(t.errorUpdatingAddress || "Erreur lors de la mise à jour de l'adresse");
       }
-      return await res.json();
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/addresses'] });
